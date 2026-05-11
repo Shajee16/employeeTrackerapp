@@ -26,7 +26,10 @@ export default function ProofPage() {
 
   return (
     <div className="animate-fade">
-      <h2 style={{ fontWeight: 700, fontSize: '1.3rem', marginBottom: 20 }}>📎 Proof of Work</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <a href="/dashboard/workspace" className="btn btn-ghost" style={{ textDecoration: 'none' }}>← Back to Workspace</a>
+        <h2 style={{ fontWeight: 700, fontSize: '1.3rem', margin: 0 }}>📎 Proof of Work</h2>
+      </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         <button onClick={() => setTab('submit')} className={`btn ${tab === 'submit' ? 'btn-primary' : 'btn-secondary'}`}>📤 Submit Proof</button>
         <button onClick={() => setTab('history')} className={`btn ${tab === 'history' ? 'btn-primary' : 'btn-secondary'}`}>📋 History</button>

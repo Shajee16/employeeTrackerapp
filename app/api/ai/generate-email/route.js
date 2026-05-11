@@ -31,36 +31,33 @@ async function callAI(prompt) {
 
 export async function POST(req) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!session) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
 
   let body;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { action, leadInfo, existingSubject, existingBody, context } = body;
+  const { action, existingSubject, existingBody, context, leadInfo } = body;
+
+  if (!action) {
+    return NextResponse.json({ error: 'Action is required (polish, generate, rewrite)' }, { status: 400 });
+  }
 
   try {
-    // ── ACTION: "polish" — Improve grammar & tone of existing email ──
+    // ═══════ ACTION: POLISH ═══════
     if (action === 'polish') {
-      if (!existingBody) {
+      if (!existingBody?.trim()) {
         return NextResponse.json({ error: 'No email body to polish' }, { status: 400 });
       }
 
-      const prompt = `You are a professional business email editor. Your job is to polish and improve the following email.
-
-Rules:
-- Fix all grammar, spelling, and punctuation errors
-- Improve sentence structure for clarity and professionalism
-- Maintain the original intent, tone, and key information
-- Keep it concise — remove filler words
-- Use a warm but professional business tone
-- Do NOT add new information or change the meaning
-- Return ONLY the improved email body text, nothing else (no "Subject:" line, no quotes, no explanation)
-
-${existingSubject ? `Email Subject: ${existingSubject}` : ''}
+      const prompt = `You are a professional email editor. Polish the following email for grammar, tone, and clarity. 
+Keep the meaning exactly the same. Make it sound professional and well-structured. 
+Do NOT add a subject line — only return the polished email body text.
 
 Email to polish:
 ${existingBody}`;
@@ -69,40 +66,38 @@ ${existingBody}`;
       return NextResponse.json({ body: polished });
     }
 
-    // ── ACTION: "generate" — Write a full email from context ──
+    // ═══════ ACTION: GENERATE ═══════
     if (action === 'generate') {
-      if (!context) {
+      if (!context?.trim()) {
         return NextResponse.json({ error: 'Please provide context for the email' }, { status: 400 });
       }
 
-      const leadContext = leadInfo
-        ? `Lead Details:
+      let leadContext = '';
+      if (leadInfo) {
+        leadContext = `\nRecipient Details:
+- Name: ${leadInfo.contactPerson || 'Unknown'}
 - Company: ${leadInfo.companyName || 'Unknown'}
-- Contact Person: ${leadInfo.contactPerson || 'Unknown'}
 - Designation: ${leadInfo.designation || 'N/A'}
 - Industry: ${leadInfo.industry || 'N/A'}
 - Services Interested: ${leadInfo.servicesInterested?.join(', ') || 'N/A'}
-- Current Status: ${leadInfo.status || 'New'}
-- Notes: ${leadInfo.notes || 'None'}`
-        : '';
+- Current Status: ${leadInfo.status || 'N/A'}
+- Notes: ${leadInfo.notes || 'None'}`;
+      }
 
-      const prompt = `You are a professional business email writer. Generate a complete, ready-to-send email based on the context below.
-
+      const prompt = `You are a professional business email writer. Generate a complete, professional email based on the context below.
 ${leadContext}
 
-User's Context / Instructions:
-${context}
+Context/Instructions: ${context}
 
-Rules:
-- Write a professional, warm, and engaging business email
-- Be concise but thorough — get to the point quickly
-- Include a clear call-to-action
+IMPORTANT: 
+- First line MUST be the subject line in format: Subject: <the subject>
+- Then a blank line
+- Then the full email body
+- Keep it professional, concise, and action-oriented
 - Use proper greeting and sign-off
-- Do NOT include fake contact info, phone numbers, or addresses
-- Sign off with just "Best regards" (the sender name will be added automatically)
 
-Return your response in EXACTLY this format:
-SUBJECT: <the subject line>
+Format:
+Subject: <subject line>
 ---
 <the email body>`;
 
@@ -112,53 +107,46 @@ SUBJECT: <the subject line>
       let subject = '';
       let emailBody = result;
 
-      const subjectMatch = result.match(/^SUBJECT:\s*(.+)/i);
+      // Try to extract subject from response
+      const subjectMatch = result.match(/^Subject:\s*(.+)/im);
       if (subjectMatch) {
         subject = subjectMatch[1].trim();
-        // Remove the SUBJECT line and separator from body
+        // Remove the subject line and separator from body
         emailBody = result
-          .replace(/^SUBJECT:\s*.+\n/i, '')
-          .replace(/^---\s*\n?/, '')
+          .replace(/^Subject:\s*.+/im, '')
+          .replace(/^---+/m, '')
           .trim();
       }
 
       return NextResponse.json({ subject, body: emailBody });
     }
 
-    // ── ACTION: "rewrite" — Rewrite existing email with new context ──
+    // ═══════ ACTION: REWRITE ═══════
     if (action === 'rewrite') {
-      if (!existingBody && !context) {
-        return NextResponse.json({ error: 'Provide either existing email or context' }, { status: 400 });
+      let leadContext = '';
+      if (leadInfo) {
+        leadContext = `\nRecipient: ${leadInfo.contactPerson || 'Unknown'} at ${leadInfo.companyName || 'Unknown'}
+Industry: ${leadInfo.industry || 'N/A'}
+Services: ${leadInfo.servicesInterested?.join(', ') || 'N/A'}`;
       }
 
-      const leadContext = leadInfo
-        ? `Lead Details:
-- Company: ${leadInfo.companyName || 'Unknown'}
-- Contact Person: ${leadInfo.contactPerson || 'Unknown'}
-- Designation: ${leadInfo.designation || 'N/A'}
-- Industry: ${leadInfo.industry || 'N/A'}
-- Services Interested: ${leadInfo.servicesInterested?.join(', ') || 'N/A'}`
-        : '';
-
-      const prompt = `You are a professional business email writer. Rewrite the following email incorporating the new context/instructions provided by the user.
-
+      const prompt = `You are a professional email writer. Rewrite the following email incorporating the new context/instructions below.
+Keep the core intent but improve and merge the new context.
 ${leadContext}
 
-Original Email Subject: ${existingSubject || '(none)'}
-Original Email Body:
+Existing email:
 ${existingBody || '(empty)'}
 
-User's New Context / Instructions:
-${context || 'Improve and make more professional'}
+New context/instructions: ${context || 'Improve the email overall'}
 
-Rules:
-- Completely rewrite the email based on the new context
-- Maintain professionalism and clarity
-- Be concise and include a clear call-to-action
-- Sign off with just "Best regards"
+IMPORTANT:
+- First line MUST be the subject line in format: Subject: <the subject>
+- Then a blank line
+- Then the full email body
+- Keep it professional and well-structured
 
-Return your response in EXACTLY this format:
-SUBJECT: <the subject line>
+Format:
+Subject: <subject line>
 ---
 <the email body>`;
 
@@ -167,12 +155,12 @@ SUBJECT: <the subject line>
       let subject = existingSubject || '';
       let emailBody = result;
 
-      const subjectMatch = result.match(/^SUBJECT:\s*(.+)/i);
+      const subjectMatch = result.match(/^Subject:\s*(.+)/im);
       if (subjectMatch) {
         subject = subjectMatch[1].trim();
         emailBody = result
-          .replace(/^SUBJECT:\s*.+\n/i, '')
-          .replace(/^---\s*\n?/, '')
+          .replace(/^Subject:\s*.+/im, '')
+          .replace(/^---+/m, '')
           .trim();
       }
 
@@ -180,8 +168,9 @@ SUBJECT: <the subject line>
     }
 
     return NextResponse.json({ error: 'Invalid action. Use: polish, generate, or rewrite' }, { status: 400 });
+
   } catch (err) {
     console.error('AI Email Error:', err);
-    return NextResponse.json({ error: err.message || 'AI generation failed. Please try again.' }, { status: 500 });
+    return NextResponse.json({ error: err.message || 'AI generation failed' }, { status: 500 });
   }
 }

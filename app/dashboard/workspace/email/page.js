@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 export default function EmailPage() {
   const [leads, setLeads] = useState([]);
@@ -29,10 +30,10 @@ export default function EmailPage() {
     fetch('/api/emails').then(r => r.json()).then(d => setEmails(d.emails || []));
   }, []);
 
-  const selectLead = (email) => {
-    const lead = leads.find(l => l.email === email);
+  const selectLead = (leadId) => {
+    const lead = leads.find(l => l.id === leadId);
     setSelectedLead(lead || null);
-    setForm({ ...form, to: email, toName: lead?.contactPerson || '' });
+    setForm({ ...form, to: lead?.email || '', toName: lead?.contactPerson || '' });
   };
 
   const applyTemplate = (name) => {
@@ -115,7 +116,15 @@ export default function EmailPage() {
 
   return (
     <div className="animate-fade">
-      <h2 style={{ fontWeight: 700, fontSize: '1.3rem', marginBottom: 20 }}>✉️ Email Center</h2>
+      {/* Header with back button */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Link href="/dashboard/workspace" className="btn btn-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
+            ← Back to Workspace
+          </Link>
+          <h2 style={{ fontWeight: 700, fontSize: '1.3rem', margin: 0 }}>✉️ Email Center</h2>
+        </div>
+      </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {['compose', 'sent'].map(t => (
@@ -151,12 +160,12 @@ export default function EmailPage() {
               </div>
             )}
 
-            {/* To field */}
+            {/* Lead Selector */}
             <div className="form-group">
-              <label className="form-label">To</label>
-              <select value={form.to} onChange={e => selectLead(e.target.value)}>
+              <label className="form-label">Select Lead</label>
+              <select value={selectedLead?.id || ''} onChange={e => selectLead(e.target.value)}>
                 <option value="">Select a lead</option>
-                {leads.map((l, i) => <option key={`${l.id}-${i}`} value={l.email}>{l.contactPerson} ({l.companyName})</option>)}
+                {leads.map((l, i) => <option key={`${l.id}-${i}`} value={l.id}>{l.contactPerson} ({l.companyName}){l.email ? ` — ${l.email}` : ''}</option>)}
               </select>
             </div>
 
@@ -185,6 +194,33 @@ export default function EmailPage() {
                 </div>
               </div>
             )}
+
+            {/* ═══ TO (Email) — Editable ═══ */}
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                📧 To (Email Address)
+                {selectedLead && form.to !== selectedLead.email && (
+                  <span style={{ fontSize: '0.7rem', color: '#f59e0b', fontWeight: 600, background: 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: 6 }}>
+                    Edited
+                  </span>
+                )}
+              </label>
+              <input
+                type="email"
+                value={form.to}
+                onChange={e => setForm({...form, to: e.target.value})}
+                placeholder="recipient@example.com"
+                style={{
+                  fontFamily: 'var(--font-family)',
+                  fontSize: '0.9rem',
+                }}
+              />
+              {selectedLead && !selectedLead.email && (
+                <p style={{ fontSize: '0.72rem', color: '#f59e0b', marginTop: 4, marginBottom: 0 }}>
+                  ⚠️ This lead has no email on file. You can type one manually above.
+                </p>
+              )}
+            </div>
 
             {/* Templates + AI Toggle */}
             <div className="form-group">
@@ -276,7 +312,7 @@ export default function EmailPage() {
                     <h3 style={{ fontWeight: 800, fontSize: '1rem', margin: 0 }}>AI Email Assistant</h3>
                   </div>
                   <p style={{ fontSize: '0.75rem', opacity: 0.85, margin: 0 }}>
-                    Powered by Google Gemini — Generate, polish, or rewrite emails
+                    AI Powered — Generate, polish, or rewrite emails
                   </p>
                 </div>
 

@@ -78,7 +78,7 @@ export default function AddLeadPage() {
     <div className="animate-fade" style={{ maxWidth: 680, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button onClick={() => router.back()} className="btn btn-ghost">← Back</button>
+        <a href="/dashboard/workspace" className="btn btn-ghost" style={{ textDecoration: 'none' }}>← Back to Workspace</a>
       </div>
 
       {errors.submit && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '10px 14px', color: 'var(--danger)', marginBottom: 16 }}>{errors.submit}</div>}

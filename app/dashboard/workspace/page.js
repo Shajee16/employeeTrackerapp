@@ -156,6 +156,7 @@ export default function WorkspacePage() {
                 <th style={{ width: 40 }}>#</th>
                 <th>Company</th>
                 <th>Contact</th>
+                <th className="hide-mobile">Email</th>
                 <th className="hide-mobile">Phone</th>
                 <th className="hide-mobile">Service</th>
                 <th>Status</th>
@@ -175,6 +176,7 @@ export default function WorkspacePage() {
                     </td>
                     <td><strong>{lead.companyName}</strong></td>
                     <td>{lead.contactPerson}</td>
+                    <td className="hide-mobile" style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lead.email || <span style={{ fontStyle: 'italic', opacity: 0.5 }}>—</span>}</td>
                     <td className="hide-mobile">{lead.phone}</td>
                     <td className="hide-mobile">{lead.servicesInterested?.join(', ') || '-'}</td>
                     <td><span className={`badge badge-${statusColors[lead.status] || 'new'}`}>{lead.status}</span></td>
@@ -202,7 +204,7 @@ export default function WorkspacePage() {
                   </tr>
                   {expanded === lead.id && (
                     <tr key={lead.id + '-exp'}>
-                      <td colSpan={8} style={{ padding: 0 }}>
+                      <td colSpan={9} style={{ padding: 0 }}>
                         <div style={{ padding: '20px 24px', background: 'var(--bg-secondary)', animation: 'slideUp 0.3s ease' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                             <h4 style={{ fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8 }}>

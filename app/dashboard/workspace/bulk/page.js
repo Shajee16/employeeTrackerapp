@@ -137,7 +137,7 @@ export default function BulkUploadPage() {
     <div className="animate-fade" style={{ maxWidth: 900, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button onClick={() => router.back()} className="btn btn-ghost">← Back</button>
+        <a href="/dashboard/workspace" className="btn btn-ghost" style={{ textDecoration: 'none' }}>← Back to Workspace</a>
         <h2 style={{ fontWeight: 700, fontSize: '1.3rem' }}>📊 Bulk Lead Upload</h2>
       </div>
 
