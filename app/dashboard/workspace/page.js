@@ -1,10 +1,36 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const statusColors = { New: 'new', Contacted: 'contacted', Qualified: 'qualified', Proposal: 'proposal', Closed: 'closed', Lost: 'lost' };
 
+const activityTypeColors = {
+  Connect: { bg: 'rgba(99, 102, 241, 0.12)', color: '#6366f1', icon: '🔗' },
+  Email: { bg: 'rgba(96, 165, 250, 0.12)', color: '#3b82f6', icon: '✉️' },
+  Followup: { bg: 'rgba(244, 114, 182, 0.12)', color: '#ec4899', icon: '📞' },
+  Status: { bg: 'rgba(251, 191, 36, 0.12)', color: '#d97706', icon: '🔄' },
+  Call: { bg: 'rgba(52, 211, 153, 0.12)', color: '#059669', icon: '📱' },
+  Demo: { bg: 'rgba(167, 139, 250, 0.12)', color: '#7c3aed', icon: '🎥' },
+  Meeting: { bg: 'rgba(249, 115, 22, 0.12)', color: '#ea580c', icon: '🤝' },
+  Note: { bg: 'rgba(148, 163, 184, 0.12)', color: '#64748b', icon: '📝' },
+  'Status Change': { bg: 'rgba(248, 113, 113, 0.12)', color: '#dc2626', icon: '🔄' },
+};
+
+const followupModes = ['Phone Call', 'Email', 'Video Call', 'In-Person Meeting', 'WhatsApp', 'LinkedIn', 'Other'];
+const clientResponseOptions = [
+  'Interested — Moving Forward',
+  'Requested More Info',
+  'Follow-up Scheduled',
+  'Not Interested',
+  'No Response',
+  'Deal Closed',
+  'On Hold',
+  'Referred to Decision Maker',
+];
+
 export default function WorkspacePage() {
+  const router = useRouter();
   const [leads, setLeads] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -13,7 +39,18 @@ export default function WorkspacePage() {
   const [editLead, setEditLead] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
 
+  // Follow-up modal
+  const [showFollowup, setShowFollowup] = useState(false);
+  const [followupLead, setFollowupLead] = useState(null);
+  const [followupForm, setFollowupForm] = useState({
+    date: '', mode: 'Phone Call', discussionSummary: '',
+    clientResponse: 'Interested — Moving Forward', nextAction: '', nextFollowupDate: '',
+  });
+  const [followupSubmitting, setFollowupSubmitting] = useState(false);
+  const [followupSuccess, setFollowupSuccess] = useState(false);
+
   useEffect(() => { fetchLeads(); }, []);
+
   const fetchLeads = () => {
     setLoading(true);
     fetch('/api/leads').then(r => r.json()).then(d => { setLeads(d.leads || []); setLoading(false); });
@@ -36,11 +73,60 @@ export default function WorkspacePage() {
     setShowEdit(false); setEditLead(null); fetchLeads();
   };
 
+  // Open follow-up modal for a lead
+  const openFollowup = (lead) => {
+    setFollowupLead(lead);
+    setFollowupForm({
+      date: new Date().toISOString().split('T')[0],
+      mode: 'Phone Call',
+      discussionSummary: '',
+      clientResponse: 'Interested — Moving Forward',
+      nextAction: '',
+      nextFollowupDate: '',
+    });
+    setFollowupSuccess(false);
+    setShowFollowup(true);
+  };
+
+  const handleFollowupSubmit = async () => {
+    if (!followupForm.date) return;
+    setFollowupSubmitting(true);
+    try {
+      await fetch('/api/followups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          leadId: followupLead.id,
+          clientName: followupLead.companyName,
+          contactPerson: followupLead.contactPerson,
+          ...followupForm,
+        }),
+      });
+      setFollowupSuccess(true);
+      setTimeout(() => {
+        setShowFollowup(false);
+        setFollowupLead(null);
+        setFollowupSuccess(false);
+        fetchLeads();
+      }, 1200);
+    } catch (e) {
+      console.error('Follow-up error:', e);
+    }
+    setFollowupSubmitting(false);
+  };
+
+  const getActivityStyle = (type) => {
+    return activityTypeColors[type] || activityTypeColors['Note'];
+  };
+
   return (
     <div className="animate-fade">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <h2 style={{ fontWeight: 700, fontSize: '1.3rem' }}>👥 Lead Roster</h2>
-        <Link href="/dashboard/workspace/add" className="btn btn-primary">➕ Add Lead</Link>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Link href="/dashboard/workspace/bulk" className="btn btn-outline" style={{ gap: 6 }}>📊 Bulk Upload</Link>
+          <Link href="/dashboard/workspace/add" className="btn btn-primary">➕ Add Lead</Link>
+        </div>
       </div>
 
       {/* Filters */}
@@ -83,7 +169,7 @@ export default function WorkspacePage() {
                   <tr style={{ cursor: 'pointer' }} onClick={() => setExpanded(expanded === lead.id ? null : lead.id)}>
                     <td>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ transform: expanded === lead.id ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 0.2s', display: 'inline-block' }}>▶</span>
+                        <span style={{ transform: expanded === lead.id ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 0.2s', display: 'inline-block', fontSize: '0.7rem', color: 'var(--text-muted)' }}>▶</span>
                         {i + 1}
                       </span>
                     </td>
@@ -94,24 +180,115 @@ export default function WorkspacePage() {
                     <td><span className={`badge badge-${statusColors[lead.status] || 'new'}`}>{lead.status}</span></td>
                     <td className="hide-mobile" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(lead.updatedAt).toLocaleDateString()}</td>
                     <td>
-                      <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
-                        <button className="btn btn-ghost btn-sm" onClick={() => { setEditLead({...lead}); setShowEdit(true); }} title="Edit">✏️</button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(lead.id)} title="Delete">🗑️</button>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'nowrap' }} onClick={e => e.stopPropagation()}>
+                        <button
+                          className="workspace-action-btn workspace-action-email"
+                          onClick={() => router.push(`/dashboard/workspace/email?lead=${lead.id}`)}
+                          title="Send Email"
+                        >
+                          <span style={{ fontSize: '0.72rem' }}>✉️</span> Email
+                        </button>
+                        <button
+                          className="workspace-action-btn workspace-action-followup"
+                          onClick={() => openFollowup(lead)}
+                          title="Log Follow-up"
+                        >
+                          <span style={{ fontSize: '0.72rem' }}>📋</span> Follow Up
+                        </button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => { setEditLead({...lead}); setShowEdit(true); }} title="Edit" style={{ padding: '4px 8px' }}>✏️</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(lead.id)} title="Delete" style={{ padding: '4px 8px' }}>🗑️</button>
                       </div>
                     </td>
                   </tr>
                   {expanded === lead.id && (
                     <tr key={lead.id + '-exp'}>
                       <td colSpan={8} style={{ padding: 0 }}>
-                        <div style={{ padding: '16px 24px', background: 'var(--bg-secondary)', animation: 'slideUp 0.3s ease' }}>
-                          <h4 style={{ fontWeight: 600, marginBottom: 12, fontSize: '0.9rem' }}>📋 Activity Log</h4>
-                          {lead.activities?.length > 0 ? lead.activities.map((a, ai) => (
-                            <div key={`${a.id}-${ai}`} style={{ display: 'flex', gap: 12, marginBottom: 10, padding: '8px 12px', background: 'var(--surface)', borderRadius: 8, fontSize: '0.85rem' }}>
-                              <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{new Date(a.timestamp).toLocaleDateString()}</span>
-                              <span className="badge badge-submitted" style={{ flexShrink: 0 }}>{a.type}</span>
-                              <span>{a.description}</span>
+                        <div style={{ padding: '20px 24px', background: 'var(--bg-secondary)', animation: 'slideUp 0.3s ease' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                            <h4 style={{ fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span>📋</span> Activity History
+                              {lead.activities?.length > 0 && (
+                                <span style={{
+                                  background: 'var(--primary-glow)', color: 'var(--primary)',
+                                  padding: '2px 8px', borderRadius: 50, fontSize: '0.72rem', fontWeight: 700,
+                                }}>
+                                  {lead.activities.length}
+                                </span>
+                              )}
+                            </h4>
+                            <button
+                              className="btn btn-sm btn-primary"
+                              onClick={(e) => { e.stopPropagation(); openFollowup(lead); }}
+                              style={{ padding: '5px 12px', fontSize: '0.75rem' }}
+                            >
+                              + Add Follow-up
+                            </button>
+                          </div>
+                          {lead.activities?.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, position: 'relative' }}>
+                              {/* Timeline line */}
+                              <div style={{
+                                position: 'absolute', left: 15, top: 12, bottom: 12,
+                                width: 2, background: 'var(--surface-border)', borderRadius: 1,
+                              }} />
+                              {[...lead.activities].reverse().map((a, ai) => {
+                                const style = getActivityStyle(a.type);
+                                return (
+                                  <div key={`${a.id}-${ai}`} style={{
+                                    display: 'flex', gap: 16, padding: '12px 0',
+                                    position: 'relative', marginLeft: 0,
+                                  }}>
+                                    {/* Timeline dot */}
+                                    <div style={{
+                                      width: 30, height: 30, borderRadius: '50%',
+                                      background: style.bg, border: `2px solid ${style.color}`,
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                      flexShrink: 0, fontSize: '0.75rem', zIndex: 1,
+                                    }}>
+                                      {style.icon}
+                                    </div>
+                                    {/* Content */}
+                                    <div style={{
+                                      flex: 1, background: 'var(--surface)', borderRadius: 10,
+                                      padding: '12px 16px', border: '1px solid var(--surface-border)',
+                                      transition: 'box-shadow 0.2s',
+                                    }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
+                                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                                          {new Date(a.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        </span>
+                                        <span style={{
+                                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                                          padding: '2px 10px', borderRadius: 50,
+                                          fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
+                                          letterSpacing: '0.04em',
+                                          background: style.bg, color: style.color,
+                                        }}>
+                                          {a.type}
+                                        </span>
+                                      </div>
+                                      <p style={{ fontSize: '0.85rem', color: 'var(--text)', lineHeight: 1.5 }}>{a.description}</p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
-                          )) : <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No activities yet</p>}
+                          ) : (
+                            <div style={{
+                              textAlign: 'center', padding: '24px 16px',
+                              color: 'var(--text-muted)', fontSize: '0.85rem',
+                              background: 'var(--surface)', borderRadius: 10,
+                              border: '1px dashed var(--surface-border)',
+                            }}>
+                              <p style={{ marginBottom: 8 }}>No activities yet</p>
+                              <button
+                                className="btn btn-sm btn-secondary"
+                                onClick={(e) => { e.stopPropagation(); openFollowup(lead); }}
+                              >
+                                Log first follow-up →
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -163,10 +340,159 @@ export default function WorkspacePage() {
         </div>
       )}
 
+      {/* ═══════════════════════════════════════════════════
+          CLIENT FOLLOW-UP LOG MODAL
+          ═══════════════════════════════════════════════════ */}
+      {showFollowup && followupLead && (
+        <div className="modal-overlay" onClick={() => { setShowFollowup(false); setFollowupLead(null); }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 540 }}>
+            {/* Header */}
+            <div className="modal-header" style={{ marginBottom: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)',
+                }}>
+                  <span style={{ fontSize: '1rem' }}>📋</span>
+                </div>
+                <div>
+                  <h3 className="modal-title" style={{ marginBottom: 0 }}>Client Follow-up Log</h3>
+                </div>
+              </div>
+              <button className="modal-close" onClick={() => { setShowFollowup(false); setFollowupLead(null); }}>×</button>
+            </div>
+            <p style={{ color: 'var(--primary-light)', fontSize: '0.78rem', fontWeight: 500, marginBottom: 20, marginLeft: 48 }}>
+              Log every follow-up to maintain accurate pipeline records
+            </p>
+
+            {followupSuccess ? (
+              <div style={{
+                textAlign: 'center', padding: '40px 20px',
+                animation: 'slideUp 0.3s ease',
+              }}>
+                <div style={{
+                  width: 64, height: 64, borderRadius: '50%',
+                  background: 'rgba(52, 211, 153, 0.12)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 16px', fontSize: '1.8rem',
+                }}>✅</div>
+                <h4 style={{ fontWeight: 700, marginBottom: 4 }}>Follow-up Logged!</h4>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Activity added to {followupLead.companyName}</p>
+              </div>
+            ) : (
+              <div>
+                {/* Date */}
+                <div className="form-group">
+                  <label className="form-label">Date</label>
+                  <input
+                    type="date"
+                    value={followupForm.date}
+                    onChange={e => setFollowupForm({ ...followupForm, date: e.target.value })}
+                  />
+                </div>
+
+                {/* Client Name + Contact Person */}
+                <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                  <div className="form-group">
+                    <label className="form-label">Client Name</label>
+                    <input
+                      value={followupLead.companyName}
+                      readOnly
+                      style={{ background: 'var(--bg-secondary)', opacity: 0.8, cursor: 'default' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Contact Person</label>
+                    <input
+                      value={followupLead.contactPerson}
+                      readOnly
+                      style={{ background: 'var(--bg-secondary)', opacity: 0.8, cursor: 'default' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Mode of Follow-up */}
+                <div className="form-group">
+                  <label className="form-label">Mode of Follow-up</label>
+                  <select
+                    value={followupForm.mode}
+                    onChange={e => setFollowupForm({ ...followupForm, mode: e.target.value })}
+                  >
+                    {followupModes.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+
+                {/* Discussion Summary */}
+                <div className="form-group">
+                  <label className="form-label">Discussion Summary</label>
+                  <textarea
+                    placeholder="What was discussed..."
+                    rows={3}
+                    value={followupForm.discussionSummary}
+                    onChange={e => setFollowupForm({ ...followupForm, discussionSummary: e.target.value })}
+                  />
+                </div>
+
+                {/* Client Response / Status */}
+                <div className="form-group">
+                  <label className="form-label">Client Response / Status</label>
+                  <select
+                    value={followupForm.clientResponse}
+                    onChange={e => setFollowupForm({ ...followupForm, clientResponse: e.target.value })}
+                  >
+                    {clientResponseOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+
+                {/* Next Action Required */}
+                <div className="form-group">
+                  <label className="form-label">Next Action Required</label>
+                  <textarea
+                    placeholder="Send revised proposal, schedule demo..."
+                    rows={2}
+                    value={followupForm.nextAction}
+                    onChange={e => setFollowupForm({ ...followupForm, nextAction: e.target.value })}
+                  />
+                </div>
+
+                {/* Next Follow-up Date */}
+                <div className="form-group">
+                  <label className="form-label">Next Follow-up Date</label>
+                  <input
+                    type="date"
+                    value={followupForm.nextFollowupDate}
+                    onChange={e => setFollowupForm({ ...followupForm, nextFollowupDate: e.target.value })}
+                  />
+                </div>
+
+                {/* Submit */}
+                <button
+                  className="btn btn-lg w-full"
+                  onClick={handleFollowupSubmit}
+                  disabled={followupSubmitting || !followupForm.date}
+                  style={{
+                    background: 'linear-gradient(135deg, #6366f1, #7c3aed)',
+                    color: '#fff', justifyContent: 'center',
+                    boxShadow: '0 4px 16px rgba(99, 102, 241, 0.35)',
+                    borderRadius: 12, marginTop: 4, fontWeight: 700,
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {followupSubmitting ? 'Submitting...' : 'Submit Follow-up'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Sub-navigation */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 24 }}>
         {[
           { icon: '➕', label: 'Add Lead', href: '/dashboard/workspace/add', desc: 'Create new lead entry' },
+          { icon: '📊', label: 'Bulk Upload', href: '/dashboard/workspace/bulk', desc: 'Import leads from CSV/Excel' },
           { icon: '✉️', label: 'Compose Email', href: '/dashboard/workspace/email', desc: 'Send emails to leads' },
           { icon: '📎', label: 'Proof of Work', href: '/dashboard/workspace/proof', desc: 'Submit work evidence' },
         ].map((item, i) => (
@@ -177,6 +503,51 @@ export default function WorkspacePage() {
           </Link>
         ))}
       </div>
+
+      {/* Scoped styles for action buttons */}
+      <style>{`
+        .workspace-action-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 12px;
+          border-radius: 8px;
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.01em;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s;
+          white-space: nowrap;
+          font-family: var(--font-family);
+        }
+        .workspace-action-email {
+          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          color: #fff;
+          box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+        }
+        .workspace-action-email:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+          filter: brightness(1.08);
+        }
+        .workspace-action-followup {
+          background: linear-gradient(135deg, #6366f1, #7c3aed);
+          color: #fff;
+          box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+        }
+        .workspace-action-followup:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+          filter: brightness(1.08);
+        }
+        @media (max-width: 768px) {
+          .workspace-action-btn {
+            padding: 4px 8px;
+            font-size: 0.68rem;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -35,18 +35,25 @@ export async function POST(req) {
   const dup = leads.find(l => l.userId === session.id && (l.email === body.email || l.phone === body.phone));
   if (dup) return NextResponse.json({ error: 'A lead with this email or phone already exists' }, { status: 400 });
 
+  const validStatuses = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed', 'Lost'];
   const newLead = {
     id: uuid(), userId: session.id,
     companyName: sanitizeString(body.companyName, 200),
     contactPerson: sanitizeString(body.contactPerson, 100),
+    designation: sanitizeString(body.designation || '', 100),
     phone: sanitizeString(body.phone || '', 20),
     email: sanitizeString(body.email || '', 254),
     address: sanitizeString(body.address || '', 500),
+    industry: sanitizeString(body.industry || '', 100),
+    companySize: sanitizeString(body.companySize || '', 20),
     servicesInterested: Array.isArray(body.servicesInterested) ? body.servicesInterested.map(s => sanitizeString(s, 100)) : [],
     source: sanitizeString(body.source || '', 100),
+    estMonthlyVolume: sanitizeString(body.estMonthlyVolume || '', 50),
+    estDealValue: sanitizeString(body.estDealValue || '', 50),
     notes: sanitizeString(body.notes || '', 2000),
     priority: ['Low', 'Medium', 'High', 'Critical'].includes(body.priority) ? body.priority : 'Medium',
-    status: 'New',
+    status: validStatuses.includes(body.status) ? body.status : 'New',
+    nextFollowupDate: sanitizeString(body.nextFollowupDate || '', 20),
     activities: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
   };
   leads.push(newLead);
@@ -70,7 +77,7 @@ export async function PUT(req) {
   if (idx === -1) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
 
   // Only allow updating specific fields — prevent overwriting userId, id, etc.
-  const allowedFields = ['companyName', 'contactPerson', 'phone', 'email', 'address', 'servicesInterested', 'source', 'notes', 'priority', 'status', 'dealValue'];
+  const allowedFields = ['companyName', 'contactPerson', 'designation', 'phone', 'email', 'address', 'industry', 'companySize', 'servicesInterested', 'source', 'estMonthlyVolume', 'estDealValue', 'notes', 'priority', 'status', 'dealValue', 'nextFollowupDate'];
   for (const field of allowedFields) {
     if (body[field] !== undefined) {
       leads[idx][field] = typeof body[field] === 'string' ? sanitizeString(body[field], 2000) : body[field];

@@ -3,20 +3,22 @@ import { getSession } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 
 // GET: fetch today's active session + monthly logged hours
-export async function GET() {
+export async function GET(req) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { searchParams } = new URL(req.url);
+  const localDate = searchParams.get('localDate');
 
   const db = await getDb();
   const col = db.collection('timesessions');
 
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = localDate || now.toISOString().split('T')[0];
 
   // Find today's active session (not yet clocked out)
   const activeSession = await col.findOne({
     userId: session.id,
-    date: todayStr,
     logoutTime: null,
   });
 
@@ -25,6 +27,7 @@ export async function GET() {
     userId: session.id,
     date: todayStr,
   }).toArray();
+
 
   // Calculate today's total seconds from completed sessions
   let todayTotalSeconds = 0;

@@ -20,19 +20,54 @@ const navItems = [
 
 /* ──────────────────────────────────────────────────────
    LIVE CLOCK COMPONENT — renders HH:MM:SS
+   Uses native local Date methods for reliable midnight reset
    ────────────────────────────────────────────────────── */
+function getLocalDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function LiveClock({ loginTime, todayTotalSeconds, monthlyTotalSeconds }) {
-  const [elapsed, setElapsed] = useState(0);
+  const [todayTotal, setTodayTotal] = useState(0);
+  const [monthTotal, setMonthTotal] = useState(0);
 
   useEffect(() => {
-    if (!loginTime) { setElapsed(0); return; }
+    const tick = () => {
+      const now = new Date();
+      const todayStr = getLocalDateStr(now);
 
-    const start = new Date(loginTime).getTime();
-    const tick = () => setElapsed(Math.floor((Date.now() - start) / 1000));
+      let liveToday = 0;
+      let liveMonth = 0;
+
+      if (loginTime) {
+        const loginDate = new Date(loginTime);
+        const loginDayStr = getLocalDateStr(loginDate);
+
+        // Total elapsed since login (always counts for month)
+        liveMonth = Math.max(0, Math.floor((now.getTime() - loginDate.getTime()) / 1000));
+
+        if (loginDayStr === todayStr) {
+          // Logged in today — count full elapsed
+          liveToday = liveMonth;
+        } else {
+          // Logged in on a previous day — only count from local midnight
+          const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+          liveToday = Math.max(0, Math.floor((now.getTime() - midnight.getTime()) / 1000));
+        }
+      }
+
+      // todayTotalSeconds from API = completed sessions for today only
+      // If login was yesterday, API returns 0 for today (correct)
+      setTodayTotal((todayTotalSeconds || 0) + liveToday);
+      setMonthTotal((monthlyTotalSeconds || 0) + liveMonth);
+    };
+
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [loginTime]);
+  }, [loginTime, todayTotalSeconds, monthlyTotalSeconds]);
 
   const fmtTime = (secs) => {
     const h = Math.floor(secs / 3600);
@@ -46,8 +81,6 @@ function LiveClock({ loginTime, todayTotalSeconds, monthlyTotalSeconds }) {
     const m = Math.floor((secs % 3600) / 60);
     return `${h}h ${m}m`;
   };
-
-  const todayTotal = todayTotalSeconds + (loginTime ? elapsed : 0);
 
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -73,7 +106,7 @@ function LiveClock({ loginTime, todayTotalSeconds, monthlyTotalSeconds }) {
         <div className="time-clock-info">
           <span className="time-clock-label">Month</span>
           <span className="time-clock-value" style={{ color: '#818cf8' }}>
-            {fmtHoursMinutes(monthlyTotalSeconds + (loginTime ? elapsed : 0))}
+            {fmtHoursMinutes(monthTotal)}
           </span>
         </div>
       </div>
@@ -113,7 +146,9 @@ export default function DashboardLayout({ children }) {
 
   // Fetch time tracking data after user is loaded
   const fetchTimeData = useCallback(() => {
-    fetch('/api/timetrack')
+    const localDateStr = getLocalDateStr(new Date());
+
+    fetch(`/api/timetrack?localDate=${localDateStr}`)
       .then(r => r.json())
       .then(d => {
         setTimeData({
