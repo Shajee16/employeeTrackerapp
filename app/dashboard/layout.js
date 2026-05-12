@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, createContext, useContext, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { LayoutDashboard, Briefcase, FileText, History, Trophy, CalendarDays, Lightbulb, ListTodo, Settings, ChevronLeft, LogOut, Menu, Sun, Monitor, Moon, Search, Bell, Timer, CalendarClock } from 'lucide-react';
+import { LayoutDashboard, Briefcase, FileText, History, Trophy, CalendarDays, Lightbulb, ListTodo, Settings, ChevronLeft, LogOut, Menu, Sun, Monitor, Moon, Search, Bell, Timer, CalendarClock, AlertTriangle, Info, Zap } from 'lucide-react';
 import logoImg from '../logo.png';
 
 const UserContext = createContext(null);
@@ -16,6 +16,7 @@ const navItems = [
   { icon: CalendarDays, label: 'Attendance', path: '/dashboard/attendance' },
   { icon: Lightbulb, label: 'Suggestions', path: '/dashboard/suggestions' },
   { icon: ListTodo, label: 'Tasks', path: '/dashboard/tasks' },
+  { icon: Bell, label: 'Alert History', path: '/dashboard/alerts' },
   { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
 ];
 
@@ -147,6 +148,11 @@ export default function DashboardLayout({ children }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [emailUnread, setEmailUnread] = useState(0);
+  // Alerts
+  const [pendingAlerts, setPendingAlerts] = useState([]);
+  const [activeAlertIdx, setActiveAlertIdx] = useState(0);
+  const [alertComment, setAlertComment] = useState('');
+  const [alertSubmitting, setAlertSubmitting] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => {
@@ -157,6 +163,11 @@ export default function DashboardLayout({ children }) {
       setThemeMode(userTheme);
       setThemeColor(userColor);
       setLoading(false);
+      // Check for unacknowledged alerts
+      fetch('/api/alerts').then(r => r.json()).then(ad => {
+        const unacked = (ad.alerts || []).filter(a => !a.acknowledged);
+        if (unacked.length > 0) { setPendingAlerts(unacked); setActiveAlertIdx(0); }
+      }).catch(() => {});
     }).catch(() => router.push('/login'));
   }, [router]);
 
@@ -298,9 +309,72 @@ export default function DashboardLayout({ children }) {
 
   const isActive = (path) => path === '/dashboard' ? pathname === path : pathname.startsWith(path);
 
+  const SEV = {
+    info:     { color: '#3b82f6', bg: '#eff6ff', Icon: Info },
+    warning:  { color: '#d97706', bg: '#fffbeb', Icon: AlertTriangle },
+    critical: { color: '#ef4444', bg: '#fee2e2', Icon: Zap },
+  };
+
+  const acknowledgeAlert = async () => {
+    const alert = pendingAlerts[activeAlertIdx];
+    if (!alert) return;
+    if (alert.requireComment && !alertComment.trim()) return;
+    setAlertSubmitting(true);
+    await fetch('/api/alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alertId: alert.id, comment: alertComment }),
+    });
+    setAlertComment('');
+    setAlertSubmitting(false);
+    if (activeAlertIdx + 1 < pendingAlerts.length) {
+      setActiveAlertIdx(i => i + 1);
+    } else {
+      setPendingAlerts([]);
+    }
+  };
+
   return (
     <UserContext.Provider value={{ user, setUser, theme: themeMode, setTheme: setThemeMode, themeColor, setThemeColor }}>
       <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+        {/* ── Full-page Alert Overlay ─────────────────── */}
+        {pendingAlerts.length > 0 && (() => {
+          const alert = pendingAlerts[activeAlertIdx];
+          const sev = SEV[alert?.severity] || SEV.info;
+          const SevIcon = sev.Icon;
+          return (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+              <div style={{ width: '100%', maxWidth: 560, background: '#fff', borderRadius: 24, overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.4)' }}>
+                {/* Severity band */}
+                <div style={{ background: sev.color, padding: '18px 28px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <SevIcon size={28} color="#fff" />
+                  <div>
+                    <p style={{ color: '#fff', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.01em' }}>{alert?.title}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', marginTop: 2 }}>Alert {activeAlertIdx + 1} of {pendingAlerts.length} • From: Admin</p>
+                  </div>
+                </div>
+                {/* Body */}
+                <div style={{ padding: '28px 28px 24px' }}>
+                  <p style={{ color: '#1e293b', fontSize: '0.95rem', lineHeight: 1.7, marginBottom: 20 }}>{alert?.message}</p>
+                  {alert?.requireComment ? (
+                    <div style={{ marginBottom: 20 }}>
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                        {alert?.commentPrompt || 'Your Comment'} <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <textarea value={alertComment} onChange={e => setAlertComment(e.target.value)} placeholder="Write your response here..." style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: '0.875rem', outline: 'none', resize: 'vertical', minHeight: 90, fontFamily: 'inherit', color: '#0f172a', boxSizing: 'border-box' }} />
+                    </div>
+                  ) : (
+                    <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: 20 }}>Please click below to acknowledge you have read this alert.</p>
+                  )}
+                  <button onClick={acknowledgeAlert} disabled={alertSubmitting || (alert?.requireComment && !alertComment.trim())}
+                    style={{ width: '100%', padding: '13px', background: sev.color, color: '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: '1rem', cursor: alertSubmitting ? 'not-allowed' : 'pointer', opacity: (alertSubmitting || (alert?.requireComment && !alertComment.trim())) ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+                    {alertSubmitting ? 'Acknowledging...' : pendingAlerts.length > 1 ? `Acknowledge & Continue (${activeAlertIdx + 1}/${pendingAlerts.length})` : 'I Acknowledge This Alert'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         {/* Mobile overlay */}
         {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', zIndex: 40 }} />}
 
