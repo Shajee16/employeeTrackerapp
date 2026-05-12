@@ -54,7 +54,7 @@ export default function LoginPage() {
               <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
                 <rect width="44" height="44" rx="14" fill="url(#lg1)"/>
                 <path d="M14 22L19 14h6l-4 8h5l-8 12 2-8h-5l5-6z" fill="#fff" opacity="0.9"/>
-                <defs><linearGradient id="lg1" x1="0" y1="0" x2="44" y2="44"><stop stopColor="#818cf8"/><stop offset="1" stopColor="#6366f1"/></linearGradient></defs>
+                <defs><linearGradient id="lg1" x1="0" y1="0" x2="44" y2="44"><stop stopColor="var(--primary-light)"/><stop offset="1" stopColor="var(--primary)"/></linearGradient></defs>
               </svg>
             </div>
             <h1 style={styles.title}>NexusFlow</h1>
@@ -67,14 +67,14 @@ export default function LoginPage() {
             <div style={styles.formGroup}>
               <label style={styles.label}>Email Address</label>
               <div style={styles.inputWrap}>
-                <span style={styles.inputIcon}><Mail size={17} color="#818cf8" /></span>
+                <span style={styles.inputIcon}><Mail size={17} color="var(--primary)" /></span>
                 <input
                   type="email" placeholder="you@company.com" required
                   style={styles.input}
                   value={form.email}
                   onChange={e => setForm({...form, email: e.target.value})}
-                  onFocus={e => { e.target.style.borderColor = '#818cf8'; e.target.style.boxShadow = '0 0 0 3px rgba(129,140,248,0.15)'; }}
-                  onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 0 3px var(--primary-glow)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'var(--surface-border)'; e.target.style.boxShadow = 'none'; }}
                 />
               </div>
             </div>
@@ -82,17 +82,17 @@ export default function LoginPage() {
             <div style={styles.formGroup}>
               <label style={styles.label}>Password</label>
               <div style={styles.inputWrap}>
-                <span style={styles.inputIcon}><Lock size={17} color="#818cf8" /></span>
+                <span style={styles.inputIcon}><Lock size={17} color="var(--primary)" /></span>
                 <input
                   type={showPw ? 'text' : 'password'} placeholder="Enter your password" required
                   style={styles.input}
                   value={form.password}
                   onChange={e => setForm({...form, password: e.target.value})}
-                  onFocus={e => { e.target.style.borderColor = '#818cf8'; e.target.style.boxShadow = '0 0 0 3px rgba(129,140,248,0.15)'; }}
-                  onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 0 3px var(--primary-glow)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'var(--surface-border)'; e.target.style.boxShadow = 'none'; }}
                 />
                 <button type="button" style={styles.eyeBtn} onClick={() => setShowPw(!showPw)}>
-                  {showPw ? <EyeOff size={18} color="#64748b" /> : <Eye size={18} color="#64748b" />}
+                  {showPw ? <EyeOff size={18} color="var(--text-muted)" /> : <Eye size={18} color="var(--text-muted)" />}
                 </button>
               </div>
             </div>
@@ -106,8 +106,8 @@ export default function LoginPage() {
             </div>
 
             <button type="submit" disabled={loading} style={styles.submitBtn}
-              onMouseEnter={e => { if (!loading) { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 8px 24px rgba(99,102,241,0.4)'; } }}
-              onMouseLeave={e => { e.target.style.transform = 'none'; e.target.style.boxShadow = '0 4px 16px rgba(99,102,241,0.3)'; }}>
+              onMouseEnter={e => { if (!loading) { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 8px 24px var(--primary-glow)'; } }}
+              onMouseLeave={e => { e.target.style.transform = 'none'; e.target.style.boxShadow = '0 4px 16px var(--primary-glow)'; }}>
               {loading ? <span style={styles.spinner} /> : <ArrowRight size={18} />}
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
@@ -115,11 +115,11 @@ export default function LoginPage() {
 
           <div style={styles.demoBox}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
-              <KeyRound size={14} color="#818cf8" />
+              <KeyRound size={14} color="var(--primary)" />
               <p style={styles.demoTitle}>Demo Credentials</p>
             </div>
-            <p style={styles.demoText}>Email: <strong style={{ color: '#c7d2fe' }}>ahmad@company.com</strong></p>
-            <p style={styles.demoText}>Password: <strong style={{ color: '#c7d2fe' }}>password123</strong></p>
+            <p style={styles.demoText}>Email: <strong style={{ color: 'var(--text)' }}>ahmad@company.com</strong></p>
+            <p style={styles.demoText}>Password: <strong style={{ color: 'var(--text)' }}>password123</strong></p>
           </div>
         </div>
       </div>
@@ -133,32 +133,32 @@ export default function LoginPage() {
 }
 
 const styles = {
-  wrapper: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0f0a2e 0%, #1e1b4b 40%, #312e81 100%)', position: 'relative', overflow: 'hidden', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  wrapper: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', position: 'relative', overflow: 'hidden', fontFamily: "'Plus Jakarta Sans', sans-serif" },
   bgOrbs: { position: 'absolute', inset: 0, pointerEvents: 'none' },
-  orb: { position: 'absolute', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.25 },
-  orb1: { width: 500, height: 500, background: '#6366f1', top: '-15%', left: '-10%' },
-  orb2: { width: 400, height: 400, background: '#f472b6', bottom: '-10%', right: '-8%' },
-  orb3: { width: 250, height: 250, background: '#818cf8', top: '40%', left: '55%', transform: 'translate(-50%,-50%)' },
+  orb: { position: 'absolute', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4 },
+  orb1: { width: 500, height: 500, background: 'var(--primary-light)', top: '-15%', left: '-10%' },
+  orb2: { width: 400, height: 400, background: 'var(--accent-light)', bottom: '-10%', right: '-8%' },
+  orb3: { width: 250, height: 250, background: 'var(--warning)', top: '40%', left: '55%', transform: 'translate(-50%,-50%)' },
   container: { position: 'relative', zIndex: 1, width: '100%', maxWidth: 440, padding: '20px' },
-  card: { background: 'rgba(30, 27, 75, 0.7)', backdropFilter: 'blur(24px)', border: '1px solid rgba(129,140,248,0.15)', borderRadius: 24, padding: '44px 36px', boxShadow: '0 24px 64px rgba(0,0,0,0.4)' },
+  card: { background: 'var(--surface)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid var(--surface-border)', borderRadius: 24, padding: '44px 36px', boxShadow: 'var(--shadow-lg)' },
   logoSection: { textAlign: 'center', marginBottom: 36 },
   logo: { display: 'inline-flex', marginBottom: 16 },
-  title: { fontSize: '1.8rem', fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.03em' },
-  subtitle: { fontSize: '0.88rem', color: '#94a3b8', marginTop: 6, fontWeight: 400 },
-  errorBox: { background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 12, padding: '10px 14px', color: '#fca5a5', fontSize: '0.85rem', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 },
+  title: { fontSize: '1.8rem', fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.03em' },
+  subtitle: { fontSize: '0.88rem', color: 'var(--text-muted)', marginTop: 6, fontWeight: 400 },
+  errorBox: { background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 12, padding: '10px 14px', color: 'var(--danger)', fontSize: '0.85rem', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 },
   formGroup: { marginBottom: 20 },
-  label: { display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' },
+  label: { display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' },
   inputWrap: { position: 'relative', display: 'flex', alignItems: 'center' },
   inputIcon: { position: 'absolute', left: 14, pointerEvents: 'none', zIndex: 1, display: 'flex' },
-  input: { width: '100%', padding: '13px 14px 13px 46px', background: 'rgba(255,255,255,0.04)', border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#f1f5f9', fontSize: '0.9rem', transition: 'border 0.2s, box-shadow 0.2s', outline: 'none', fontFamily: 'inherit' },
+  input: { width: '100%', padding: '13px 14px 13px 46px', background: 'var(--bg-secondary)', border: '1.5px solid var(--surface-border)', borderRadius: 12, color: 'var(--text)', fontSize: '0.9rem', transition: 'border 0.2s, box-shadow 0.2s', outline: 'none', fontFamily: 'inherit' },
   eyeBtn: { position: 'absolute', right: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' },
   options: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  checkLabel: { display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', color: '#94a3b8', cursor: 'pointer' },
-  checkbox: { width: 16, height: 16, accentColor: '#6366f1', borderRadius: 4 },
-  forgotLink: { fontSize: '0.85rem', color: '#818cf8', textDecoration: 'none', fontWeight: 500 },
-  submitBtn: { width: '100%', padding: '14px', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: '#fff', border: 'none', borderRadius: 12, fontSize: '1rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 4px 16px rgba(99,102,241,0.3)', fontFamily: 'inherit', letterSpacing: '-0.01em' },
+  checkLabel: { display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', color: 'var(--text-muted)', cursor: 'pointer' },
+  checkbox: { width: 16, height: 16, accentColor: 'var(--primary)', borderRadius: 4 },
+  forgotLink: { fontSize: '0.85rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: 500 },
+  submitBtn: { width: '100%', padding: '14px', background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))', color: '#fff', border: 'none', borderRadius: 12, fontSize: '1rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 4px 16px var(--primary-glow)', fontFamily: 'inherit', letterSpacing: '-0.01em' },
   spinner: { width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.6s linear infinite', display: 'inline-block' },
-  demoBox: { marginTop: 28, padding: '16px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: 14, textAlign: 'center' },
-  demoTitle: { fontSize: '0.78rem', fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.04em' },
-  demoText: { fontSize: '0.82rem', color: '#94a3b8', lineHeight: 1.6 },
+  demoBox: { marginTop: 28, padding: '16px', background: 'var(--bg-secondary)', border: '1px solid var(--surface-border)', borderRadius: 14, textAlign: 'center' },
+  demoTitle: { fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.04em' },
+  demoText: { fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 },
 };
