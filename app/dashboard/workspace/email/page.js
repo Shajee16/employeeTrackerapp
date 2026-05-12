@@ -702,18 +702,18 @@ export default function EmailPage() {
                         💬 Quick Reply to {threadLead?.contactPerson || openThread}
                       </div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {Object.entries({
-                          'Acknowledge': { subject: 'Re: Updates', body: `Hi ${threadLead?.contactPerson || ''},\n\nThanks for the update. Received and noted.\n\nBest,` },
-                          'Schedule Call': { subject: "Re: Let's Connect", body: `Hi ${threadLead?.contactPerson || ''},\n\nWhen would be a good time for a quick 10-minute call this week?\n\nBest regards,` },
-                          'Send Info': { subject: 'Re: Information Requested', body: `Hi ${threadLead?.contactPerson || ''},\n\nPlease find the requested information below.\n\nLet me know if you need anything else.\n\nBest,` }
-                        }).map(([name, t]) => (
+                        {[
+                          { name: 'Acknowledge', subject: 'Re: Updates', body: `Hi ${threadLead?.contactPerson || ''},\n\nThanks for the update. Received and noted.\n\nBest,` },
+                          { name: 'Schedule Call', subject: 'Re: Let’s Connect', body: `Hi ${threadLead?.contactPerson || ''},\n\nWhen would be a good time for a quick 10-minute call this week?\n\nBest regards,` },
+                          { name: 'Send Info', subject: 'Re: Information Requested', body: `Hi ${threadLead?.contactPerson || ''},\n\nPlease find the requested information below.\n\nLet me know if you need anything else.\n\nBest,` }
+                        ].map(t => (
                           <button
-                            key={name}
+                            key={t.name}
                             onClick={() => setReplyForm({ subject: t.subject, body: t.body })}
                             className="btn btn-sm btn-ghost"
                             style={{ fontSize: '0.72rem', padding: '4px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--surface-border)' }}
                           >
-                            {name}
+                            {t.name}
                           </button>
                         ))}
                       </div>
