@@ -39,8 +39,8 @@ export default function DashboardHome() {
     <div className="animate-fade">
       {/* Welcome banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #312e81 0%, #4f46e5 40%, #818cf8 100%)',
-        borderRadius: 20, padding: '32px 36px', marginBottom: 28, color: '#fff', position: 'relative', overflow: 'hidden',
+        background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 40%, var(--primary-light) 100%)',
+        borderRadius: 20, padding: '32px 36px', marginBottom: 28, color: 'var(--primary-invert, #fff)', position: 'relative', overflow: 'hidden',
       }}>
         {/* Decorative elements */}
         <div style={{ position: 'absolute', right: -40, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
@@ -58,7 +58,7 @@ export default function DashboardHome() {
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.12)', padding: '5px 14px', borderRadius: 20, fontSize: '0.8rem', fontWeight: 500 }}>
             {user?.role}
           </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, opacity: 0.6, fontSize: '0.8rem', fontWeight: 400 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, opacity: 0.8, fontSize: '0.8rem', fontWeight: 500 }}>
             <Clock size={14} /> {today}
           </span>
         </div>

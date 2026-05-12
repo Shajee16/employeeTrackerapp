@@ -128,7 +128,8 @@ export default function DashboardLayout({ children }) {
   const [user, setUser] = useState(null);
   const [sideOpen, setSideOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState('system');
+  const [themeMode, setThemeMode] = useState('system');
+  const [themeColor, setThemeColor] = useState('beige');
   const [loading, setLoading] = useState(true);
 
   // Time tracking state
@@ -150,7 +151,10 @@ export default function DashboardLayout({ children }) {
     fetch('/api/auth/me').then(r => r.json()).then(d => {
       if (!d.user) { router.push('/login'); return; }
       setUser(d.user);
-      setTheme(d.user.theme || 'system');
+      const userTheme = d.user.theme || 'system';
+      const userColor = d.user.themeColor || 'beige';
+      setThemeMode(userTheme);
+      setThemeColor(userColor);
       setLoading(false);
     }).catch(() => router.push('/login'));
   }, [router]);
@@ -236,11 +240,23 @@ export default function DashboardLayout({ children }) {
   }, [user]);
 
   useEffect(() => {
-    const apply = theme === 'system'
-      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-      : theme;
+    let mode = themeMode;
+    if (themeMode === 'system') {
+      mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    
+    // Combine mode and color
+    let apply = themeColor;
+    if (mode === 'dark') {
+      apply = themeColor === 'beige' ? 'dark' : `${themeColor}-dark`; // beige's dark mode is just 'dark'
+    } else if (themeColor !== 'beige') {
+      apply = themeColor; // 'seafoam' or 'rose'
+    } else {
+      apply = 'light'; // default light for beige
+    }
+    
     document.documentElement.setAttribute('data-theme', apply);
-  }, [theme]);
+  }, [themeMode, themeColor]);
 
   const fetchTasks = useCallback(() => {
     fetch('/api/tasks').then(r => r.json()).then(d => {
@@ -282,7 +298,7 @@ export default function DashboardLayout({ children }) {
   const isActive = (path) => path === '/dashboard' ? pathname === path : pathname.startsWith(path);
 
   return (
-    <UserContext.Provider value={{ user, setUser, theme, setTheme }}>
+    <UserContext.Provider value={{ user, setUser, theme: themeMode, setTheme: setThemeMode, themeColor, setThemeColor }}>
       <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
         {/* Mobile overlay */}
         {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', zIndex: 40 }} />}
@@ -302,15 +318,15 @@ export default function DashboardLayout({ children }) {
           <div style={{ padding: sideOpen ? '24px 20px' : '24px 16px', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{
               width: 40, height: 40, borderRadius: 12,
-              background: 'linear-gradient(135deg, #818cf8, #6366f1)',
+              background: 'linear-gradient(135deg, var(--primary-light), var(--primary))',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
+              boxShadow: 'var(--shadow-md)',
             }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-invert, #fff)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
               </svg>
             </div>
-            {sideOpen && <span style={{ color: '#f1f5f9', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.03em' }}>NexusFlow</span>}
+            {sideOpen && <span style={{ color: 'var(--text)', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.03em' }}>NexusFlow</span>}
           </div>
 
           {/* User */}
@@ -319,15 +335,15 @@ export default function DashboardLayout({ children }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 12,
-                  background: 'linear-gradient(135deg, #818cf8, #f472b6)',
+                  background: 'linear-gradient(135deg, var(--primary-light), var(--accent, #f472b6))',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0,
+                  color: 'var(--primary-invert, #fff)', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0,
                 }}>
                   {user.name?.charAt(0)}
                 </div>
                 <div style={{ overflow: 'hidden' }}>
-                  <p style={{ color: '#f1f5f9', fontWeight: 600, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</p>
-                  <p style={{ color: 'rgba(199, 210, 254, 0.6)', fontSize: '0.75rem', fontWeight: 500 }}>{user.department} · {user.role}</p>
+                  <p style={{ color: 'var(--text)', fontWeight: 600, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 500 }}>{user.department} · {user.role}</p>
                 </div>
               </div>
             </div>
@@ -335,7 +351,7 @@ export default function DashboardLayout({ children }) {
 
           {/* Nav section label */}
           {sideOpen && (
-            <div style={{ padding: '16px 20px 8px', fontSize: '0.68rem', fontWeight: 700, color: 'rgba(199, 210, 254, 0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <div style={{ padding: '16px 20px 8px', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Navigation
             </div>
           )}
@@ -360,7 +376,7 @@ export default function DashboardLayout({ children }) {
                     transition: 'all 0.15s ease',
                     position: 'relative',
                   }}>
-                  {active && <div style={{ position: 'absolute', left: 0, top: '22%', bottom: '22%', width: 3, borderRadius: 2, background: '#818cf8' }} />}
+                  {active && <div style={{ position: 'absolute', left: 0, top: '22%', bottom: '22%', width: 3, borderRadius: 2, background: 'var(--primary)' }} />}
                   <Icon size={19} strokeWidth={active ? 2 : 1.5} style={{ flexShrink: 0 }} />
                   {sideOpen && <span>{item.label}</span>}
                   {item.label === 'Workspace' && emailUnread > 0 && (
@@ -423,7 +439,28 @@ export default function DashboardLayout({ children }) {
                 monthlyTotalSeconds={timeData.monthlyTotalSeconds}
               />
 
-              {/* Theme toggle */}
+              {/* Theme color palette toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '3px', borderRadius: '24px', border: '1px solid var(--surface-border)', gap: 4 }}>
+                {[
+                  { key: 'beige', color: '#c29b76' },
+                  { key: 'seafoam', color: '#5b9e8c' },
+                  { key: 'rose', color: '#c97a8e' },
+                ].map(({ key, color }) => (
+                  <button key={key} onClick={async () => {
+                    setThemeColor(key);
+                    await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'themeColor', themeColor: key }) });
+                  }}
+                    style={{
+                      width: 24, height: 24, borderRadius: '50%', border: '2px solid',
+                      borderColor: themeColor === key ? 'var(--text)' : 'transparent',
+                      background: color,
+                      cursor: 'pointer', transition: 'all 0.2s',
+                    }}
+                    title={`Color: ${key}`} />
+                ))}
+              </div>
+
+              {/* Theme light/dark toggle */}
               <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '3px', borderRadius: '24px', border: '1px solid var(--surface-border)' }}>
                 {[
                   { key: 'light', icon: Sun },
@@ -431,18 +468,18 @@ export default function DashboardLayout({ children }) {
                   { key: 'dark', icon: Moon },
                 ].map(({ key, icon: ThIcon }) => (
                   <button key={key} onClick={async () => {
-                    setTheme(key);
+                    setThemeMode(key);
                     await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'theme', theme: key }) });
                   }}
                     style={{
                       width: 32, height: 32, borderRadius: '50%', border: 'none',
-                      background: theme === key ? 'var(--surface)' : 'transparent',
-                      boxShadow: theme === key ? 'var(--shadow-sm)' : 'none',
+                      background: themeMode === key ? 'var(--surface)' : 'transparent',
+                      boxShadow: themeMode === key ? 'var(--shadow-sm)' : 'none',
                       cursor: 'pointer', transition: 'all 0.2s',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: theme === key ? 'var(--primary)' : 'var(--text-muted)',
+                      color: themeMode === key ? 'var(--primary)' : 'var(--text-muted)',
                     }}
-                    title={`Theme: ${key}`}>
+                    title={`Mode: ${key}`}>
                     <ThIcon size={15} />
                   </button>
                 ))}
@@ -480,10 +517,10 @@ export default function DashboardLayout({ children }) {
               <div style={{ position: 'relative' }}>
                 <button onClick={() => { setProfileOpen(!profileOpen); setNotificationsOpen(false); }} style={{
                   width: 38, height: 38, borderRadius: 12, border: 'none', cursor: 'pointer',
-                  background: 'linear-gradient(135deg, #818cf8, #f472b6)',
+                  background: 'linear-gradient(135deg, var(--primary-light), var(--accent))',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', fontWeight: 700, fontSize: '0.85rem',
-                  boxShadow: '0 2px 8px rgba(99,102,241,0.25)',
+                  color: 'var(--primary-invert, #fff)', fontWeight: 700, fontSize: '0.85rem',
+                  boxShadow: 'var(--shadow-md)',
                 }}>
                   {user?.name?.charAt(0)}
                 </button>

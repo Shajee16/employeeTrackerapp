@@ -63,6 +63,40 @@
   --shadow-lg: 0 15px 35px rgba(0,0,0,0.4);
 }
 
+/* Seafoam Light */
+[data-theme="seafoam"] {
+  --bg: #f0f9f6; --bg-secondary: #e1eee9;
+  --surface: rgba(255, 255, 255, 0.65); --surface-hover: rgba(255, 255, 255, 0.85); --surface-border: rgba(255, 255, 255, 0.7);
+  --primary: #5b9e8c; --primary-light: #82c4b3; --primary-dark: #3f7b6b; --primary-glow: rgba(91, 158, 140, 0.25);
+  --accent: #eab269; --text: #2f3d38; --text-secondary: #4a5c55; --text-muted: #7d968d;
+  --sidebar-bg: rgba(255, 255, 255, 0.5); --sidebar-active: rgba(91, 158, 140, 0.25);
+}
+/* Seafoam Dark */
+[data-theme="seafoam-dark"] {
+  --bg: #1c2623; --bg-secondary: #26332f;
+  --surface: rgba(28, 38, 35, 0.75); --surface-hover: rgba(38, 51, 47, 0.85); --surface-border: rgba(255, 255, 255, 0.08);
+  --primary: #5b9e8c; --primary-light: #82c4b3; --primary-dark: #3f7b6b; --primary-glow: rgba(91, 158, 140, 0.25);
+  --accent: #eab269; --text: #e8f4f0; --text-secondary: #bdcec8; --text-muted: #7d968d;
+  --sidebar-bg: rgba(28, 38, 35, 0.6); --sidebar-active: rgba(91, 158, 140, 0.25);
+}
+
+/* Rose Light */
+[data-theme="rose"] {
+  --bg: #fdf5f7; --bg-secondary: #f6e8ea;
+  --surface: rgba(255, 255, 255, 0.65); --surface-hover: rgba(255, 255, 255, 0.85); --surface-border: rgba(255, 255, 255, 0.7);
+  --primary: #c97a8e; --primary-light: #e69ab0; --primary-dark: #a3566b; --primary-glow: rgba(201, 122, 142, 0.25);
+  --accent: #85b4c9; --text: #452b32; --text-secondary: #66434d; --text-muted: #a37b87;
+  --sidebar-bg: rgba(255, 255, 255, 0.5); --sidebar-active: rgba(201, 122, 142, 0.25);
+}
+/* Rose Dark */
+[data-theme="rose-dark"] {
+  --bg: #291a1e; --bg-secondary: #38252a;
+  --surface: rgba(41, 26, 30, 0.75); --surface-hover: rgba(56, 37, 42, 0.85); --surface-border: rgba(255, 255, 255, 0.08);
+  --primary: #c97a8e; --primary-light: #e69ab0; --primary-dark: #a3566b; --primary-glow: rgba(201, 122, 142, 0.25);
+  --accent: #85b4c9; --text: #faebef; --text-secondary: #d6b8c1; --text-muted: #a37b87;
+  --sidebar-bg: rgba(41, 26, 30, 0.6); --sidebar-active: rgba(201, 122, 142, 0.25);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; scroll-behavior: smooth; }
 
