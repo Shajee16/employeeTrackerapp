@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useUser } from './layout';
+import { useUser } from './context';
 import { Users, ClipboardList, Handshake, Activity, Flame, Plus, Mail, CalendarCheck, ArrowUpRight, TrendingUp, Clock } from 'lucide-react';
 
 export default function DashboardHome() {

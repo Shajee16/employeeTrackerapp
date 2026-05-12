@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useUser } from '../layout';
+import { useUser } from '../context';
 
 export default function SettingsPage() {
   const ctx = useUser();

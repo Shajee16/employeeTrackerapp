@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useUser } from '../layout';
+import { useUser } from '../context';
 import { Trophy, Medal, TrendingUp, TrendingDown, Minus, Phone, Handshake, RotateCcw } from 'lucide-react';
 
 export default function LeaderboardPage() {

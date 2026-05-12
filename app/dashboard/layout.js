@@ -2,10 +2,8 @@
 import { useState, useEffect, createContext, useContext, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { LayoutDashboard, Briefcase, FileText, History, Trophy, CalendarDays, Lightbulb, ListTodo, Settings, ChevronLeft, LogOut, Menu, Sun, Monitor, Moon, Search, Bell, Timer, CalendarClock, AlertTriangle, Info, Zap } from 'lucide-react';
+import { UserContext } from './context';
 import logoImg from '../logo.png';
-
-const UserContext = createContext(null);
-export const useUser = () => useContext(UserContext);
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
