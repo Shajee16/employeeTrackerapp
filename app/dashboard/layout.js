@@ -290,7 +290,7 @@ export default function DashboardLayout({ children }) {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ width: 44, height: 44, border: '3px solid var(--surface-border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>Loading NexusFlow...</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>Loading Cluso CRM...</p>
       </div>
     </div>
   );
@@ -318,15 +318,13 @@ export default function DashboardLayout({ children }) {
           <div style={{ padding: sideOpen ? '24px 20px' : '24px 16px', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{
               width: 40, height: 40, borderRadius: 12,
-              background: 'linear-gradient(135deg, var(--primary-light), var(--primary))',
+              background: '#fff',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              boxShadow: 'var(--shadow-md)',
+              boxShadow: 'var(--shadow-md)', overflow: 'hidden'
             }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-invert, #fff)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-              </svg>
+              <img src="/logo.png" alt="Logo" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
             </div>
-            {sideOpen && <span style={{ color: 'var(--text)', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.03em' }}>NexusFlow</span>}
+            {sideOpen && <span style={{ color: 'var(--text)', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.03em' }}>Cluso CRM</span>}
           </div>
 
           {/* User */}

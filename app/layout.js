@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "NexusFlow — Employee Portal",
+  title: "Cluso CRM Portal",
   description: "Employee CRM Portal with Lead Management, Task Tracking, and Team Performance Analytics",
 };
 

@@ -43,13 +43,10 @@ export default function LoginPage() {
         <div style={styles.card} className={shake ? 'shake-anim' : ''}>
           <div style={styles.logoSection}>
             <div style={styles.logo}>
-              <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-                <rect width="44" height="44" rx="14" fill="#6366f1"/>
-                <path d="M14 22L19 14h6l-4 8h5l-8 12 2-8h-5l5-6z" fill="#fff" opacity="0.9"/>
-              </svg>
+              <img src="/logo.png" alt="Cluso CRM Logo" style={{ height: '60px', objectFit: 'contain' }} />
             </div>
-            <h1 style={styles.title}>NexusFlow</h1>
-            <p style={styles.subtitle}>Employee Portal — Sign in to continue</p>
+            <h1 style={styles.title}>Cluso CRM Portal</h1>
+            <p style={styles.subtitle}>Sign in to continue</p>
           </div>
 
           {error && <div style={styles.errorBox}><span style={{ fontSize: '0.9rem' }}>⚠️</span> {error}</div>}
