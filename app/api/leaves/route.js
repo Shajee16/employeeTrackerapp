@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { sanitizeInput, sanitizeString, isNonEmptyString, isOneOf } from '@/lib/sanitize';
 import { v4 as uuid } from 'uuid';
+import { notifyAdmins } from '@/lib/admin-notify';
 
 // GET: Fetch current user's leaves
 export async function GET() {
@@ -95,6 +96,14 @@ export async function POST(req) {
   };
 
   await db.collection('leaves').insertOne(newLeave);
+
+  await notifyAdmins({
+    type: 'warning',
+    title: '📅 Leave Request',
+    message: `${session.name || 'An employee'} applied for ${leaveType} on ${date}`,
+    link: '/dashboard/attendance',
+  });
+
   const { _id, ...clean } = newLeave;
   return NextResponse.json({ leave: clean });
 }

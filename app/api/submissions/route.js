@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { readData, writeData } from '@/lib/db';
 import { sanitizeInput, sanitizeString, isNonEmptyString } from '@/lib/sanitize';
 import { v4 as uuid } from 'uuid';
+import { notifyAdmins } from '@/lib/admin-notify';
 
 export async function GET(req) {
   const session = await getSession();
@@ -44,5 +45,13 @@ export async function POST(req) {
   };
   subs.push(newSub);
   await writeData('submissions', subs);
+
+  await notifyAdmins({
+    type: 'info',
+    title: '📝 New Submission',
+    message: `${session.name || 'An employee'} submitted a ${newSub.formType} report`,
+    link: '/dashboard/submissions',
+  });
+
   return NextResponse.json({ submission: newSub });
 }

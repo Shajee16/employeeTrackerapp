@@ -4,6 +4,7 @@ import { readData, writeData, getDb } from '@/lib/db';
 import { sanitizeInput, sanitizeString, isOneOf } from '@/lib/sanitize';
 import { v4 as uuid } from 'uuid';
 import { sendTaskEmail } from '@/lib/mailer';
+import { notifyAdmins } from '@/lib/admin-notify';
 
 export async function GET() {
   const session = await getSession();
@@ -126,8 +127,15 @@ export async function PUT(req) {
 
   const updatedTask = await db.collection('tasks').findOne({ id: body.id });
 
-  // If task is completed, send email to admin(s)
+  // If task is completed, send email to admin(s) + notification
   if (body.status === 'Completed') {
+    await notifyAdmins({
+      type: 'success',
+      title: '✅ Task Completed',
+      message: `${session.name || 'An employee'} completed: "${target.title}"`,
+      link: '/dashboard/tasks',
+    });
+
     try {
       const admins = await db.collection('users').find({ role: { $in: ['System Admin', 'Super Admin'] } }).toArray();
       const adminEmails = admins.map(a => a.email).filter(Boolean);

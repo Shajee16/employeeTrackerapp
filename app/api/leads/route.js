@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { readData, writeData } from '@/lib/db';
 import { sanitizeInput, sanitizeString, isNonEmptyString, isValidEmail } from '@/lib/sanitize';
 import { v4 as uuid } from 'uuid';
+import { notifyAdmins } from '@/lib/admin-notify';
 
 export async function GET() {
   const session = await getSession();
@@ -58,6 +59,14 @@ export async function POST(req) {
   };
   leads.push(newLead);
   await writeData('leads', leads);
+
+  await notifyAdmins({
+    type: 'success',
+    title: '🎯 New Lead Added',
+    message: `${session.name || 'An employee'} added lead: ${newLead.companyName} (${newLead.contactPerson})`,
+    link: '/dashboard/leads',
+  });
+
   return NextResponse.json({ lead: newLead });
 }
 

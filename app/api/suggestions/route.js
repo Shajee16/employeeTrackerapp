@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { readData, writeData } from '@/lib/db';
 import { sanitizeInput, sanitizeString, isNonEmptyString } from '@/lib/sanitize';
 import { v4 as uuid } from 'uuid';
+import { notifyAdmins } from '@/lib/admin-notify';
 
 export async function GET() {
   const session = await getSession();
@@ -39,5 +40,13 @@ export async function POST(req) {
   };
   sug.push(newSug);
   await writeData('suggestions', sug);
+
+  await notifyAdmins({
+    type: 'info',
+    title: '💡 New Suggestion',
+    message: `${session.name || 'An employee'} submitted: "${newSug.title}"`,
+    link: '/dashboard/suggestions',
+  });
+
   return NextResponse.json({ suggestion: newSug });
 }
