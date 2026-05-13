@@ -242,7 +242,14 @@ export default function WorkspacePage() {
                               ...receivedFromLead.map(r => ({ type: 'Email', timestamp: r.receivedAt, description: `📥 Received: ${r.subject}\n${(r.bodyPreview || '').substring(0, 150)}${r.bodyPreview?.length > 150 ? '...' : ''}` }))
                             ];
 
-                            const combinedActivities = [...(lead.activities || []), ...emailActivities].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                            // Filter out admin-only activities (reassignment logs) from employee view
+                            const employeeActivities = (lead.activities || []).filter(a => 
+                              a.type !== 'Reassignment' && 
+                              !a.adminOnly && 
+                              !(a.description && a.description.toLowerCase().includes('reassigned'))
+                            );
+
+                            const combinedActivities = [...employeeActivities, ...emailActivities].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
                             return (
                               <>
