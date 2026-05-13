@@ -11,7 +11,7 @@ export default function EmailPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [tab, setTab] = useState('compose');
   const [openThread, setOpenThread] = useState(null);
-  const [form, setForm] = useState({ to: '', toName: '', subject: '', body: '', template: '' });
+  const [form, setForm] = useState({ to: '', toName: '', subject: '', body: '', template: '', attachments: [] });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
@@ -120,13 +120,54 @@ export default function EmailPage() {
         setTimeout(() => setSendError(''), 8000);
       } else {
         setSuccess(true);
-        setTimeout(() => { setSuccess(false); setForm({ to: '', toName: '', subject: '', body: '', template: '' }); setSelectedLead(null); setTab('sent'); }, 1500);
+        setTimeout(() => { setSuccess(false); setForm({ to: '', toName: '', subject: '', body: '', template: '', attachments: [] }); setSelectedLead(null); setTab('sent'); }, 1500);
       }
       fetch('/api/emails').then(r => r.json()).then(d => setEmails(d.emails || []));
     } catch (err) {
       setSendError('Network error — could not send email');
     }
     setLoading(false);
+  };
+
+  const handleAttachment = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    
+    const MAX_SIZE = 3 * 1024 * 1024; // 3MB
+    let currentSize = form.attachments ? form.attachments.reduce((acc, att) => acc + (att.size || 0), 0) : 0;
+    
+    const newAttachments = [];
+    for (const file of files) {
+      if (currentSize + file.size > MAX_SIZE) {
+        alert(`Adding ${file.name} would exceed the 3MB total attachment limit.`);
+        continue;
+      }
+      
+      const contentBytes = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result.split(',')[1]);
+        reader.readAsDataURL(file);
+      });
+      
+      newAttachments.push({
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+        contentBytes,
+        size: file.size
+      });
+      currentSize += file.size;
+    }
+    
+    setForm(f => ({ ...f, attachments: [...(f.attachments || []), ...newAttachments] }));
+    e.target.value = ''; // reset
+  };
+
+  const removeAttachment = (index) => {
+    setForm(f => {
+      const atts = [...f.attachments];
+      atts.splice(index, 1);
+      return { ...f, attachments: atts };
+    });
   };
 
   // ═══ AI Actions ═══
@@ -382,6 +423,36 @@ export default function EmailPage() {
               <textarea value={form.body} onChange={e => setForm({...form, body: e.target.value})} rows={12} placeholder="Write your email... or use AI to generate one →" style={{ fontFamily: 'var(--font-family)', lineHeight: 1.6 }} />
             </div>
 
+            {/* Attachments */}
+            <div className="form-group">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <label className="btn btn-sm btn-outline" style={{ cursor: 'pointer', margin: 0, padding: '6px 14px', fontSize: '0.8rem' }}>
+                  📎 Add Attachments (Max 3MB total)
+                  <input type="file" multiple onChange={handleAttachment} style={{ display: 'none' }} />
+                </label>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Total size: {((form.attachments?.reduce((a, b) => a + (b.size || 0), 0) || 0) / (1024 * 1024)).toFixed(2)} MB / 3.00 MB
+                </span>
+              </div>
+              
+              {form.attachments && form.attachments.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                  {form.attachments.map((att, idx) => (
+                    <div key={idx} style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '4px 8px 4px 12px', background: 'var(--bg-secondary)',
+                      border: '1px solid var(--surface-border)', borderRadius: 20,
+                      fontSize: '0.75rem'
+                    }}>
+                      <span style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={att.name}>{att.name}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>({(att.size / 1024).toFixed(0)} KB)</span>
+                      <button onClick={() => removeAttachment(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%' }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Send */}
             <div className="form-actions">
               <button className="btn btn-primary btn-lg" onClick={handleSend} disabled={loading || !form.to || !form.subject} style={{ background: 'linear-gradient(135deg, #6366f1, #7c3aed)', boxShadow: '0 4px 16px rgba(99,102,241,0.35)' }}>
@@ -537,8 +608,14 @@ export default function EmailPage() {
                 <tr key={`${e.id}-${idx}`}>
                   <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{new Date(e.sentAt).toLocaleDateString()}<br/><span style={{ fontSize: '0.72rem' }}>{new Date(e.sentAt).toLocaleTimeString()}</span></td>
                   <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{e.sentFrom || 'indiaops@cluso.in'}</td>
-                  <td><strong>{e.toName || e.to}</strong><br/><span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{e.to}</span></td>
-                  <td>{e.subject}</td>
+                  <td>
+                    <strong>{e.toName || e.to}</strong><br/>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{e.to}</span>
+                  </td>
+                  <td>
+                    {e.subject}
+                    {e.attachmentCount > 0 && <span style={{ marginLeft: 6, fontSize: '0.7rem', padding: '1px 6px', background: 'var(--surface-border)', borderRadius: 10 }}>📎 {e.attachmentCount}</span>}
+                  </td>
                   <td>
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4,

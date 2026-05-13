@@ -18,7 +18,9 @@ export async function POST(req) {
 
   let body;
   try {
-    body = sanitizeInput(await req.json());
+    // We cannot use sanitizeInput on the whole body if it has huge base64 attachments, it might crash or truncate
+    // We'll read json first
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
@@ -34,6 +36,15 @@ export async function POST(req) {
   const toName = sanitizeString(body.toName || '', 200);
   const subject = sanitizeString(body.subject, 200);
   const emailBody = sanitizeString(body.body || '', 10000);
+  
+  let attachments = [];
+  if (Array.isArray(body.attachments)) {
+    attachments = body.attachments.map(att => ({
+      name: sanitizeString(att.name || 'attachment', 200),
+      type: sanitizeString(att.type || 'application/octet-stream', 100),
+      contentBytes: typeof att.contentBytes === 'string' ? att.contentBytes.replace(/[^A-Za-z0-9+/=]/g, '') : '',
+    })).filter(a => a.contentBytes.length > 0);
+  }
 
   // ═══ Send via Microsoft Graph API ═══
   let sendResult;
@@ -43,6 +54,7 @@ export async function POST(req) {
       toName: toName,
       subject: subject,
       body: emailBody,
+      attachments: attachments,
     });
   } catch (err) {
     console.error('Email send failed:', err);
@@ -60,6 +72,7 @@ export async function POST(req) {
     subject: subject,
     body: emailBody,
     template: sanitizeString(body.template || '', 50),
+    attachmentCount: attachments.length,
     status: sendResult.success ? 'Delivered' : 'Failed',
     sendError: sendResult.error || null,
     sentAt: new Date().toISOString(),

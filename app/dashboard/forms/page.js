@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const formTypes = [
   { key: 'deal_closed', icon: '🏆', label: 'Deal Closed', desc: 'Record a closed deal (+1000 pts)', color: '#16a34a' },
@@ -55,7 +55,8 @@ const formFields = {
     { name: 'planForTomorrow', label: 'Plan for Tomorrow', type: 'textarea', required: true },
   ],
   deal_closed: [
-    { name: 'clientName', label: 'Client / Company Name', type: 'text', required: true },
+    { name: 'leadId', label: 'Select Active Lead', type: 'lead_select', required: true },
+    { name: 'clientName', label: 'Client / Company Name', type: 'text', required: true, readOnly: true },
     { name: 'contactPerson', label: 'Contact Person', type: 'text', required: true },
     { name: 'dealValue', label: 'Deal Value (₹)', type: 'number', required: true },
     { name: 'product', label: 'Product / Service', type: 'text', required: true },
@@ -69,9 +70,11 @@ const formFields = {
 
 const formLabels = { lead: 'Lead Entry', followup: 'Client Follow-up', expense: 'Expense Report', daily: 'Daily Activity Report', deal_closed: 'Deal Closed' };
 
-export default function FormsPage() {
+function FormsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeForm, setActiveForm] = useState(null);
+  const [leads, setLeads] = useState([]);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -105,10 +108,37 @@ export default function FormsPage() {
 
   useEffect(() => {
     checkDailyReport();
-    // Check every 5 minutes
     const interval = setInterval(checkDailyReport, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [checkDailyReport]);
+
+  useEffect(() => {
+    fetch('/api/leads?t=' + Date.now()).then(r => r.json()).then(d => setLeads(d.leads || []));
+  }, []);
+
+  useEffect(() => {
+    const type = searchParams.get('type');
+    const leadId = searchParams.get('leadId');
+    if (type && formTypes.some(f => f.key === type)) {
+      setActiveForm(type);
+      if (leadId) {
+        setFormData(prev => ({ ...prev, leadId }));
+      }
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (activeForm === 'deal_closed' && formData.leadId) {
+      const selected = leads.find(l => l.id === formData.leadId);
+      if (selected && (formData.clientName !== selected.companyName || formData.contactPerson !== selected.contactPerson)) {
+        setFormData(prev => ({
+          ...prev,
+          clientName: selected.companyName,
+          contactPerson: selected.contactPerson,
+        }));
+      }
+    }
+  }, [formData.leadId, activeForm, leads]);
 
   const handleChange = (name, value) => setFormData(d => ({ ...d, [name]: value }));
 
@@ -217,8 +247,15 @@ export default function FormsPage() {
                   <option value="">Select {f.label.toLowerCase()}</option>
                   {f.options?.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
+              ) : f.type === 'lead_select' ? (
+                <select required={f.required} value={formData[f.name] || ''} onChange={e => handleChange(f.name, e.target.value)}>
+                  <option value="">Select a lead...</option>
+                  {leads.filter(l => l.status !== 'Lost').map(l => (
+                    <option key={l.id} value={l.id}>{l.companyName} ({l.contactPerson})</option>
+                  ))}
+                </select>
               ) : (
-                <input type={f.type} required={f.required} value={formData[f.name] || ''} onChange={e => handleChange(f.name, e.target.value)} placeholder={f.type === 'number' ? '0' : `Enter ${f.label.toLowerCase()}`} />
+                <input type={f.type} readOnly={f.readOnly} style={f.readOnly ? { background: 'var(--bg-secondary)', opacity: 0.8 } : {}} required={f.required} value={formData[f.name] || ''} onChange={e => handleChange(f.name, e.target.value)} placeholder={f.type === 'number' ? '0' : `Enter ${f.label.toLowerCase()}`} />
               )}
             </div>
           ))}
@@ -230,5 +267,13 @@ export default function FormsPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function FormsPage() {
+  return (
+    <Suspense fallback={<div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>Loading...</div>}>
+      <FormsContent />
+    </Suspense>
   );
 }

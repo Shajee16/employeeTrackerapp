@@ -94,6 +94,13 @@ export default function WorkspacePage() {
 
   const handleSaveEdit = async () => {
     await fetch('/api/leads', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editLead) });
+    
+    const originalLead = leads.find(l => l.id === editLead.id);
+    if (originalLead && originalLead.status !== 'Closed' && editLead.status === 'Closed') {
+      router.push(`/dashboard/forms?type=deal_closed&leadId=${editLead.id}`);
+      return;
+    }
+    
     setShowEdit(false); setEditLead(null); fetchLeads();
   };
 
