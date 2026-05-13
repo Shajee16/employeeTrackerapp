@@ -94,9 +94,52 @@ export async function DELETE(req) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { searchParams } = new URL(req.url);
   const id = sanitizeString(searchParams.get('id'), 50);
+  const reason = sanitizeString(searchParams.get('reason') || 'No reason provided', 500);
+
   const leads = await readData('leads');
-  const filtered = leads.filter(l => !(l.id === id && l.userId === session.id));
-  if (filtered.length === leads.length) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  await writeData('leads', filtered);
-  return NextResponse.json({ success: true });
+  const lead = leads.find(l => l.id === id && l.userId === session.id);
+  if (!lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+
+  // Don't actually delete — create a deletion request for admin approval
+  const { getDb } = await import('@/lib/db');
+  const db = await getDb();
+
+  // Check if there's already a pending request for this lead
+  const existing = await db.collection('lead_deletion_requests').findOne({ leadId: id, status: 'pending' });
+  if (existing) {
+    return NextResponse.json({ error: 'A deletion request is already pending for this lead', pending: true }, { status: 409 });
+  }
+
+  const request = {
+    id: uuid(),
+    leadId: id,
+    leadCompanyName: lead.companyName,
+    leadContactPerson: lead.contactPerson,
+    leadEmail: lead.email,
+    requestedByUserId: session.id,
+    requestedByName: session.name || session.email,
+    reason,
+    status: 'pending',
+    requestedAt: new Date().toISOString(),
+  };
+
+  await db.collection('lead_deletion_requests').insertOne(request);
+
+  // Mark the lead as having a pending deletion request
+  const idx = leads.findIndex(l => l.id === id);
+  if (idx !== -1) {
+    leads[idx].deletionRequested = true;
+    leads[idx].deletionRequestId = request.id;
+    leads[idx].updatedAt = new Date().toISOString();
+    leads[idx].activities = leads[idx].activities || [];
+    leads[idx].activities.push({
+      id: Date.now().toString(),
+      type: 'Status Change',
+      description: `Deletion requested by ${session.name || session.email}. Reason: ${reason}. Awaiting admin approval.`,
+      timestamp: new Date().toISOString(),
+    });
+    await writeData('leads', leads);
+  }
+
+  return NextResponse.json({ success: true, message: 'Deletion request sent to admin for approval.', requestId: request.id });
 }

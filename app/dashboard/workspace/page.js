@@ -76,8 +76,17 @@ export default function WorkspacePage() {
   });
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this lead?')) return;
-    await fetch(`/api/leads?id=${id}`, { method: 'DELETE' });
+    const reason = prompt('Reason for deleting this lead? (Admin approval required)');
+    if (reason === null) return; // cancelled
+    const res = await fetch(`/api/leads?id=${id}&reason=${encodeURIComponent(reason || 'No reason provided')}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (res.status === 409) {
+      alert('A deletion request is already pending for this lead.');
+    } else if (res.ok) {
+      alert('Deletion request sent to admin for approval.');
+    } else {
+      alert(data.error || 'Failed to request deletion.');
+    }
     fetchLeads();
   };
 
@@ -192,7 +201,9 @@ export default function WorkspacePage() {
                     <td className="hide-mobile" style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lead.email || <span style={{ fontStyle: 'italic', opacity: 0.5 }}>—</span>}</td>
                     <td className="hide-mobile">{lead.phone}</td>
                     <td className="hide-mobile">{lead.servicesInterested?.join(', ') || '-'}</td>
-                    <td><span className={`badge badge-${statusColors[lead.status] || 'new'}`}>{lead.status}</span></td>
+                    <td><span className={`badge badge-${statusColors[lead.status] || 'new'}`}>{lead.status}</span>
+                      {lead.deletionRequested && <span style={{ display: 'inline-block', marginLeft: 6, padding: '2px 8px', borderRadius: 50, fontSize: '0.65rem', fontWeight: 700, background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>⏳ Deletion Pending</span>}
+                    </td>
                     <td className="hide-mobile" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(lead.updatedAt).toLocaleDateString()}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'nowrap' }} onClick={e => e.stopPropagation()}>
@@ -211,7 +222,7 @@ export default function WorkspacePage() {
                           <span style={{ fontSize: '0.72rem' }}>📋</span> Follow Up
                         </button>
                         <button className="btn btn-ghost btn-sm" onClick={() => { setEditLead({...lead}); setShowEdit(true); }} title="Edit" style={{ padding: '4px 8px' }}>✏️</button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(lead.id)} title="Delete" style={{ padding: '4px 8px' }}>🗑️</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(lead.id)} title={lead.deletionRequested ? 'Deletion pending approval' : 'Request Delete'} disabled={lead.deletionRequested} style={{ padding: '4px 8px', opacity: lead.deletionRequested ? 0.4 : 1 }}>🗑️</button>
                       </div>
                     </td>
                   </tr>
