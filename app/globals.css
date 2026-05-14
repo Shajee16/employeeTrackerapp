@@ -197,6 +197,17 @@ input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 0
 textarea { resize: vertical; min-height: 80px; }
 select { cursor: pointer; }
 
+/* Reset for checkboxes and radio buttons */
+input[type="checkbox"], input[type="radio"] {
+  -webkit-appearance: auto;
+  appearance: auto;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border-radius: 2px; /* Slight radius for checkboxes, radio will ignore */
+  background: transparent;
+}
+
 /* ===== BUTTONS ===== */
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
