@@ -379,8 +379,9 @@ export default function DashboardLayout({ children }) {
               background: isCritical ? 'rgba(30,0,0,0.96)' : 'rgba(0,0,0,0.92)',
               backdropFilter: 'blur(12px)',
               display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              padding: 20,
+              alignItems: 'center', justifyContent: 'flex-start',
+              padding: '40px 20px',
+              overflowY: 'auto',
               animation: isCritical ? 'alertPulse 2s ease-in-out infinite' : undefined,
             }}>
               {/* Top hazard stripe */}
@@ -432,6 +433,7 @@ export default function DashboardLayout({ children }) {
                 overflow: 'hidden',
                 border: `3px solid ${borderColor}`,
                 boxShadow: `0 0 60px ${borderColor}30, 0 25px 80px rgba(0,0,0,0.4)`,
+                flexShrink: 0,
               }}>
                 {/* Title bar */}
                 <div style={{
@@ -447,7 +449,7 @@ export default function DashboardLayout({ children }) {
 
                 {/* Message body */}
                 <div style={{ padding: '28px 28px 24px' }}>
-                  <p style={{ color: '#1e293b', fontSize: '1rem', lineHeight: 1.8, marginBottom: 24, whiteSpace: 'pre-wrap', maxHeight: '50vh', overflowY: 'auto', paddingRight: '8px' }}>
+                  <p style={{ color: '#1e293b', fontSize: '1rem', lineHeight: 1.8, marginBottom: 24, whiteSpace: 'pre-wrap', maxHeight: '35vh', overflowY: 'auto', paddingRight: '8px' }}>
                     {alert?.message}
                   </p>
 
@@ -508,7 +510,7 @@ export default function DashboardLayout({ children }) {
               </div>
 
               {/* Warning footer text */}
-              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', marginTop: 24, textAlign: 'center', maxWidth: 400 }}>
+              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', marginTop: 24, textAlign: 'center', maxWidth: 400, flexShrink: 0 }}>
                 ⚠ This alert requires immediate acknowledgement. You cannot use the portal until all active alerts are addressed.
               </p>
             </div>
