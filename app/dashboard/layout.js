@@ -428,8 +428,8 @@ export default function DashboardLayout({ children }) {
 
               {/* Main content card — flex column so only message scrolls */}
               <div style={{
-                width: '100%', maxWidth: 640,
-                maxHeight: 'calc(100vh - 280px)',
+                width: '100%', maxWidth: 840,
+                maxHeight: 'calc(100vh - 160px)',
                 background: '#fff', borderRadius: 20,
                 border: `3px solid ${borderColor}`,
                 boxShadow: `0 0 60px ${borderColor}30, 0 25px 80px rgba(0,0,0,0.4)`,
@@ -514,10 +514,7 @@ export default function DashboardLayout({ children }) {
                 </div>
               </div>
 
-              {/* Warning footer text */}
-              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', marginTop: 12, textAlign: 'center', maxWidth: 400, flexShrink: 0 }}>
-                ⚠ This alert requires immediate acknowledgement. You cannot use the portal until all active alerts are addressed.
-              </p>
+
             </div>
           );
         })()}
