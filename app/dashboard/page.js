@@ -11,9 +11,25 @@ const sceneries = [
   { type: 'image', bg: 'url(/scenery/ocean.png)' },
 ];
 
+import PocDashboard from './poc/page';
+import AmbassadorDashboard from './ambassador/page';
+
 export default function DashboardHome() {
   const ctx = useUser();
   const user = ctx?.user;
+
+  if (ctx?.loading) {
+    return <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 80 }}>Loading Profile...</div>;
+  }
+
+  if (user?.role === 'College POC') {
+    return <PocDashboard />;
+  }
+
+  if (user?.role === 'Campus Ambassador') {
+    return <AmbassadorDashboard />;
+  }
+
   const [stats, setStats] = useState(null);
   const [activity, setActivity] = useState([]);
   const [bgIndex, setBgIndex] = useState(0);

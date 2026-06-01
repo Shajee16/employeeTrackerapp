@@ -60,6 +60,7 @@ export async function POST(request) {
       email: user.email,
       department: user.department,
       role: user.role,
+      collegeId: user.collegeId || null,
     });
     await setSession(token);
 

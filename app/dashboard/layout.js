@@ -7,6 +7,8 @@ import logoImg from '../logo.png';
 
 const allNavItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', desc: 'Overview of your performance and active tasks' },
+  { icon: LayoutDashboard, label: 'POC Dashboard', path: '/dashboard/poc', desc: 'College Point of Contact management dashboard', roles: ['College POC'] },
+  { icon: LayoutDashboard, label: 'Ambassador Hub', path: '/dashboard/ambassador', desc: 'Campus Ambassador hub and activity logger', roles: ['Campus Ambassador'] },
   { icon: Briefcase, label: 'Workspace', path: '/dashboard/workspace', desc: 'Manage your assigned leads and email correspondence', departments: ['Sales'] },
   { icon: PenTool, label: 'Content Studio', path: '/dashboard/content-studio', desc: 'Create posts and auto-publish to LinkedIn & Twitter', departments: ['Marketing'] },
   { icon: FileText, label: 'Forms', path: '/dashboard/forms', desc: 'Submit daily reports, expenses, and standard forms' },
@@ -579,7 +581,16 @@ export default function DashboardLayout({ children }) {
           {/* Navigation */}
           <nav style={{ flex: 1, padding: '4px 10px', overflowY: 'auto' }}>
             {allNavItems
-              .filter(item => !item.departments || item.departments.includes(user?.department))
+              .filter(item => {
+                if (item.roles) {
+                  return item.roles.includes(user?.role);
+                }
+                if (['College POC', 'Campus Ambassador'].includes(user?.role)) {
+                  // Permit only generic/essential pages for ambassadors and POCs
+                  return ['Dashboard', 'History', 'Suggestions', 'Settings', 'Tasks'].includes(item.label);
+                }
+                return !item.departments || item.departments.includes(user?.department);
+              })
               .map(item => {
               const active = isActive(item.path);
               const Icon = item.icon;
