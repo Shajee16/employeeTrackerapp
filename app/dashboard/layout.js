@@ -154,6 +154,7 @@ export default function DashboardLayout({ children }) {
   const [activeAlertIdx, setActiveAlertIdx] = useState(0);
   const [alertComment, setAlertComment] = useState('');
   const [alertSubmitting, setAlertSubmitting] = useState(false);
+  const [followupsDueToday, setFollowupsDueToday] = useState([]);
 
   // DigiLocker verification
   const [digilockerStatus, setDigilockerStatus] = useState({ verified: false, loading: true });
@@ -318,14 +319,31 @@ export default function DashboardLayout({ children }) {
     }).catch(() => setDigilockerStatus({ verified: false, loading: false }));
   }, [user]);
 
-  // Poll for new alerts every 30s (must be above early return to maintain hook order)
+  // Poll for new alerts & follow-up reminders every 30s
   useEffect(() => {
     if (!user) return;
+    const fetchFollowups = () => {
+      fetch('/api/leads').then(r => r.json()).then(ld => {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const due = (ld.leads || []).filter(l => {
+          if (!l.nextFollowupDate) return false;
+          const fd = new Date(l.nextFollowupDate); fd.setHours(0,0,0,0);
+          return fd <= today; // today or overdue
+        }).map(l => {
+          const fd = new Date(l.nextFollowupDate); fd.setHours(0,0,0,0);
+          const diff = Math.round((fd - today) / (86400000));
+          return { ...l, _diffDays: diff };
+        }).sort((a, b) => a._diffDays - b._diffDays);
+        setFollowupsDueToday(due);
+      }).catch(() => {});
+    };
+    fetchFollowups();
     const poll = setInterval(() => {
       fetch('/api/alerts').then(r => r.json()).then(ad => {
         const unacked = (ad.alerts || []).filter(a => !a.acknowledged && a.status === 'active');
         if (unacked.length > 0) { setPendingAlerts(unacked); setActiveAlertIdx(0); }
       }).catch(() => {});
+      fetchFollowups();
     }, 30000);
     return () => clearInterval(poll);
   }, [user]);
@@ -891,9 +909,9 @@ export default function DashboardLayout({ children }) {
 
                 {/* Notifications */}
                 <div style={{ position: 'relative' }}>
-                  <button onClick={() => { setNotificationsOpen(!notificationsOpen); setProfileOpen(false); setDigilockerOpen(false); }} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', border: 'var(--border-width) solid var(--surface-border)', color: pendingAlerts.length > 0 ? '#ef4444' : 'var(--text-muted)', position: 'relative', cursor: 'pointer', transition: 'all 0.15s', animation: pendingAlerts.length > 0 ? 'bellShake 1s ease-in-out infinite' : undefined }}>
+                  <button onClick={() => { setNotificationsOpen(!notificationsOpen); setProfileOpen(false); setDigilockerOpen(false); }} style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', border: 'var(--border-width) solid var(--surface-border)', color: pendingAlerts.length > 0 ? '#ef4444' : followupsDueToday.length > 0 ? '#f59e0b' : 'var(--text-muted)', position: 'relative', cursor: 'pointer', transition: 'all 0.15s', animation: pendingAlerts.length > 0 ? 'bellShake 1s ease-in-out infinite' : followupsDueToday.length > 0 ? 'bellShake 3s ease-in-out infinite' : undefined }}>
                     <Bell size={18} />
-                    {(notifications.length > 0 || emailUnread > 0 || pendingAlerts.length > 0) && <span style={{ position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: '50%', background: pendingAlerts.length > 0 ? '#ef4444' : emailUnread > 0 ? '#ef4444' : '#f472b6', border: '2px solid var(--surface)', animation: pendingAlerts.length > 0 ? 'alertIconPulse 1s ease-in-out infinite' : undefined }} />}
+                    {(notifications.length > 0 || emailUnread > 0 || pendingAlerts.length > 0 || followupsDueToday.length > 0) && <span style={{ position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: '50%', background: pendingAlerts.length > 0 ? '#ef4444' : followupsDueToday.length > 0 ? '#f59e0b' : emailUnread > 0 ? '#ef4444' : '#f472b6', border: '2px solid var(--surface)', animation: pendingAlerts.length > 0 ? 'alertIconPulse 1s ease-in-out infinite' : undefined }} />}
                   </button>
                   {notificationsOpen && (
                     <div style={{ position: 'absolute', top: '120%', right: 0, width: 320, background: 'var(--surface-overlay)', border: 'var(--border-width) solid var(--surface-border)', borderRadius: 12, boxShadow: 'var(--shadow-md)', zIndex: 100, overflow: 'hidden', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)' }}>
@@ -925,8 +943,27 @@ export default function DashboardLayout({ children }) {
                             })}
                           </>
                         )}
+                        {/* Follow-up Reminders Section */}
+                        {followupsDueToday.length > 0 && (
+                          <>
+                            <div style={{ padding: '8px 16px', background: 'rgba(245,158,11,0.06)', borderBottom: '1px solid rgba(245,158,11,0.15)' }}>
+                              <p style={{ fontSize: '0.7rem', fontWeight: 800, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.08em' }}>📅 Follow-ups Due ({followupsDueToday.length})</p>
+                            </div>
+                            {followupsDueToday.map(f => (
+                              <div key={f.id} style={{ padding: '12px 16px', borderBottom: '1px solid rgba(245,158,11,0.1)', background: f._diffDays < 0 ? 'rgba(239,68,68,0.03)' : 'rgba(245,158,11,0.03)', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer' }} onClick={() => { router.push('/dashboard/workspace'); setNotificationsOpen(false); }}>
+                                <div style={{ width: 28, height: 28, borderRadius: '50%', background: f._diffDays < 0 ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.8rem' }}>
+                                  {f._diffDays < 0 ? '🔴' : '🟠'}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.companyName} — {f.contactPerson}</span>
+                                  <span style={{ fontSize: '0.72rem', color: f._diffDays < 0 ? '#dc2626' : '#d97706' }}>{f._diffDays < 0 ? `${Math.abs(f._diffDays)}d overdue` : 'Due today'} • {new Date(f.nextFollowupDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </>
+                        )}
                         {/* Tasks Section */}
-                        {notifications.length === 0 && pendingAlerts.length === 0 ? (
+                        {notifications.length === 0 && pendingAlerts.length === 0 && followupsDueToday.length === 0 ? (
                           <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No new notifications</div>
                         ) : (
                           notifications.map(n => (

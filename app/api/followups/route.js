@@ -102,10 +102,8 @@ export async function POST(req) {
       leads[leadIdx].status = 'Contacted';
     }
 
-    // Persist next follow-up date on the lead so roster & alerts can read it
-    if (newFollowup.nextFollowupDate) {
-      leads[leadIdx].nextFollowupDate = newFollowup.nextFollowupDate;
-    }
+    // Always update next follow-up date — set new date or clear if none provided
+    leads[leadIdx].nextFollowupDate = newFollowup.nextFollowupDate || '';
 
     leads[leadIdx].updatedAt = new Date().toISOString();
     await writeData('leads', leads);
