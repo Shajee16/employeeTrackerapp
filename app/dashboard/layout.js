@@ -785,127 +785,7 @@ export default function DashboardLayout({ children }) {
 
               {/* ═══════ GROUP 3: USER ═══════ */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {/* DigiLocker Verified Badge */}
-                <div style={{ position: 'relative' }}>
-                  <button
-                    onClick={() => { setDigilockerOpen(!digilockerOpen); setNotificationsOpen(false); setProfileOpen(false); }}
-                    title={digilockerStatus.verified ? 'DigiLocker Verified' : 'DigiLocker - Not Verified'}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '6px 12px', height: 38, borderRadius: 12,
-                      background: digilockerStatus.verified
-                        ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.08))'
-                        : 'var(--bg-secondary)',
-                      border: digilockerStatus.verified
-                        ? '1.5px solid rgba(16, 185, 129, 0.35)'
-                        : 'var(--border-width) solid var(--surface-border)',
-                      cursor: 'pointer', transition: 'all 0.2s',
-                      color: digilockerStatus.verified ? '#059669' : 'var(--text-muted)',
-                    }}
-                  >
-                    {/* DigiLocker Logo SVG */}
-                    <svg width="18" height="18" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect width="64" height="64" rx="12" fill={digilockerStatus.verified ? '#059669' : '#9ca3af'}/>
-                      <path d="M20 18h8c6.627 0 12 5.373 12 12v0c0 6.627-5.373 12-12 12h-8V18z" stroke="#fff" strokeWidth="3" fill="none"/>
-                      <rect x="34" y="22" width="10" height="20" rx="3" stroke="#fff" strokeWidth="2.5" fill="none"/>
-                      <circle cx="39" cy="34" r="2" fill="#fff"/>
-                      <line x1="39" y1="34" x2="39" y2="38" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
-                      {digilockerStatus.loading ? '...' : digilockerStatus.verified ? 'Verified' : 'Verify'}
-                    </span>
-                    {digilockerStatus.verified && (
-                      <ShieldCheck size={14} style={{ color: '#059669', flexShrink: 0 }} />
-                    )}
-                  </button>
-                  {digilockerOpen && (
-                    <div style={{
-                      position: 'absolute', top: '120%', right: 0, width: 320,
-                      background: 'var(--surface-overlay)', border: 'var(--border-width) solid var(--surface-border)',
-                      borderRadius: 14, boxShadow: 'var(--shadow-md)', zIndex: 100, overflow: 'hidden',
-                      backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
-                    }}>
-                      {/* Header */}
-                      <div style={{
-                        padding: '14px 16px',
-                        background: digilockerStatus.verified
-                          ? 'linear-gradient(135deg, #059669, #10b981)'
-                          : 'linear-gradient(135deg, #6b7280, #9ca3af)',
-                        display: 'flex', alignItems: 'center', gap: 10,
-                      }}>
-                        <svg width="28" height="28" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect width="64" height="64" rx="12" fill="rgba(255,255,255,0.2)"/>
-                          <path d="M20 18h8c6.627 0 12 5.373 12 12v0c0 6.627-5.373 12-12 12h-8V18z" stroke="#fff" strokeWidth="3" fill="none"/>
-                          <rect x="34" y="22" width="10" height="20" rx="3" stroke="#fff" strokeWidth="2.5" fill="none"/>
-                          <circle cx="39" cy="34" r="2" fill="#fff"/>
-                          <line x1="39" y1="34" x2="39" y2="38" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                        <div>
-                          <p style={{ color: '#fff', fontWeight: 700, fontSize: '0.95rem', margin: 0 }}>DigiLocker</p>
-                          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.72rem', margin: 0, fontWeight: 500 }}>
-                            {digilockerStatus.verified ? '✓ Identity Verified' : 'Not Verified Yet'}
-                          </p>
-                        </div>
-                      </div>
-                      {/* Body */}
-                      <div style={{ padding: 16 }}>
-                        {digilockerStatus.verified ? (
-                          <>
-                            <div style={{ display: 'grid', gap: 10, marginBottom: 14 }}>
-                              {digilockerStatus.name && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                                  <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Name</span>
-                                  <span style={{ fontWeight: 600, color: 'var(--text)' }}>{digilockerStatus.name}</span>
-                                </div>
-                              )}
-                              {digilockerStatus.aadhaar && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                                  <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Aadhaar</span>
-                                  <span style={{ fontWeight: 600, color: 'var(--text)' }}>{digilockerStatus.aadhaar}</span>
-                                </div>
-                              )}
-                              {digilockerStatus.verifiedAt && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                                  <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Verified On</span>
-                                  <span style={{ fontWeight: 600, color: '#059669' }}>{new Date(digilockerStatus.verifiedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                </div>
-                              )}
-                            </div>
-                            <div style={{ padding: '10px 14px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <ShieldCheck size={16} color="#059669" />
-                              <span style={{ fontSize: '0.78rem', color: '#059669', fontWeight: 600 }}>Your identity is verified via DigiLocker</span>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
-                              Verify your identity through DigiLocker's MeriPehchan portal. Your government-issued documents will be securely linked.
-                            </p>
-                            <a
-                              href="/api/digilocker/auth"
-                              style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                                width: '100%', padding: '12px 16px', borderRadius: 10, border: 'none',
-                                background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-                                color: '#fff', fontWeight: 700, fontSize: '0.88rem',
-                                cursor: 'pointer', transition: 'all 0.2s', textDecoration: 'none',
-                              }}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect width="64" height="64" rx="12" fill="rgba(255,255,255,0.2)"/>
-                                <path d="M20 18h8c6.627 0 12 5.373 12 12v0c0 6.627-5.373 12-12 12h-8V18z" stroke="#fff" strokeWidth="3" fill="none"/>
-                                <rect x="34" y="22" width="10" height="20" rx="3" stroke="#fff" strokeWidth="2.5" fill="none"/>
-                                <circle cx="39" cy="34" r="2" fill="#fff"/>
-                                <line x1="39" y1="34" x2="39" y2="38" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-                              </svg>
-                              Verify via DigiLocker
-                            </a>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+
 
                 {/* Notifications */}
                 <div style={{ position: 'relative' }}>
@@ -1004,24 +884,136 @@ export default function DashboardLayout({ children }) {
                   )}
                 </div>
 
-                {/* DigiLocker Verified Status Badge */}
-                {digilockerStatus.verified && (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '6px 12px',
-                    height: 38,
-                    borderRadius: 12,
-                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.08))',
-                    border: '1.5px solid rgba(16, 185, 129, 0.35)',
-                    color: '#059669',
-                    boxSizing: 'border-box'
-                  }} title="DigiLocker Verified">
-                    <img src="/DigiLocker.png" alt="DigiLocker Verified" style={{ width: 20, height: 20, objectFit: 'contain' }} />
-                    <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>DigiLocker Verified</span>
-                  </div>
-                )}
+                {/* DigiLocker Unified Topbar Badge */}
+                <div style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => { setDigilockerOpen(!digilockerOpen); setNotificationsOpen(false); setProfileOpen(false); }}
+                    title={digilockerStatus.verified ? 'DigiLocker Verified' : 'DigiLocker - Not Verified'}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '6px 12px',
+                      height: 38,
+                      borderRadius: 12,
+                      background: digilockerStatus.verified
+                        ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.08))'
+                        : 'var(--bg-secondary)',
+                      border: digilockerStatus.verified
+                        ? '1.5px solid rgba(16, 185, 129, 0.35)'
+                        : 'var(--border-width) solid var(--surface-border)',
+                      color: digilockerStatus.verified ? '#059669' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <img 
+                      src="/DigiLocker.png" 
+                      alt="DigiLocker Logo" 
+                      style={{ 
+                        width: 20, 
+                        height: 20, 
+                        objectFit: 'contain',
+                        filter: digilockerStatus.verified ? 'none' : 'grayscale(100%) opacity(0.6)'
+                      }} 
+                    />
+                    <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
+                      {digilockerStatus.loading ? '...' : digilockerStatus.verified ? 'DigiLocker Verified' : 'Verify DigiLocker'}
+                    </span>
+                    {digilockerStatus.verified && (
+                      <ShieldCheck size={14} style={{ color: '#059669', flexShrink: 0 }} />
+                    )}
+                  </button>
+
+                  {digilockerOpen && (
+                    <div style={{
+                      position: 'absolute', top: '120%', right: 0, width: 320,
+                      background: 'var(--surface-overlay)', border: 'var(--border-width) solid var(--surface-border)',
+                      borderRadius: 14, boxShadow: 'var(--shadow-md)', zIndex: 100, overflow: 'hidden',
+                      backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
+                    }}>
+                      {/* Header */}
+                      <div style={{
+                        padding: '14px 16px',
+                        background: digilockerStatus.verified
+                          ? 'linear-gradient(135deg, #059669, #10b981)'
+                          : 'linear-gradient(135deg, #6b7280, #9ca3af)',
+                        display: 'flex', alignItems: 'center', gap: 10,
+                      }}>
+                        <svg width="28" height="28" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="64" height="64" rx="12" fill="rgba(255,255,255,0.2)"/>
+                          <path d="M20 18h8c6.627 0 12 5.373 12 12v0c0 6.627-5.373 12-12 12h-8V18z" stroke="#fff" strokeWidth="3" fill="none"/>
+                          <rect x="34" y="22" width="10" height="20" rx="3" stroke="#fff" strokeWidth="2.5" fill="none"/>
+                          <circle cx="39" cy="34" r="2" fill="#fff"/>
+                          <line x1="39" y1="34" x2="39" y2="38" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        <div>
+                          <p style={{ color: '#fff', fontWeight: 700, fontSize: '0.95rem', margin: 0 }}>DigiLocker</p>
+                          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.72rem', margin: 0, fontWeight: 500 }}>
+                            {digilockerStatus.verified ? '✓ Identity Verified' : 'Not Verified Yet'}
+                          </p>
+                        </div>
+                      </div>
+                      {/* Body */}
+                      <div style={{ padding: 16 }}>
+                        {digilockerStatus.verified ? (
+                          <>
+                            <div style={{ display: 'grid', gap: 10, marginBottom: 14 }}>
+                              {digilockerStatus.name && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                                  <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Name</span>
+                                  <span style={{ fontWeight: 600, color: 'var(--text)' }}>{digilockerStatus.name}</span>
+                                </div>
+                              )}
+                              {digilockerStatus.aadhaar && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                                  <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Aadhaar</span>
+                                  <span style={{ fontWeight: 600, color: 'var(--text)' }}>{digilockerStatus.aadhaar}</span>
+                                </div>
+                              )}
+                              {digilockerStatus.verifiedAt && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                                  <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Verified On</span>
+                                  <span style={{ fontWeight: 600, color: '#059669' }}>{new Date(digilockerStatus.verifiedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ padding: '10px 14px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <ShieldCheck size={16} color="#059669" />
+                              <span style={{ fontSize: '0.78rem', color: '#059669', fontWeight: 600 }}>Your identity is verified via DigiLocker</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
+                              Verify your identity through DigiLocker's MeriPehchan portal. Your government-issued documents will be securely linked.
+                            </p>
+                            <a
+                              href="/api/digilocker/auth"
+                              style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                width: '100%', padding: '12px 16px', borderRadius: 10, border: 'none',
+                                background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                                color: '#fff', fontWeight: 700, fontSize: '0.88rem',
+                                cursor: 'pointer', transition: 'all 0.2s', textDecoration: 'none',
+                              }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="64" height="64" rx="12" fill="rgba(255,255,255,0.2)"/>
+                                <path d="M20 18h8c6.627 0 12 5.373 12 12v0c0 6.627-5.373 12-12 12h-8V18z" stroke="#fff" strokeWidth="3" fill="none"/>
+                                <rect x="34" y="22" width="10" height="20" rx="3" stroke="#fff" strokeWidth="2.5" fill="none"/>
+                                <circle cx="39" cy="34" r="2" fill="#fff"/>
+                                <line x1="39" y1="34" x2="39" y2="38" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+                              </svg>
+                              Verify via DigiLocker
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </header>
