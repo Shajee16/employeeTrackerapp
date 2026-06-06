@@ -831,12 +831,6 @@ export default function DashboardLayout({ children }) {
                         {digilockerStatus.verified ? (
                           <>
                             <div style={{ display: 'grid', gap: 10, marginBottom: 14 }}>
-                              {digilockerStatus.digilockerid && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                                  <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>DigiLocker ID</span>
-                                  <span style={{ fontWeight: 700, color: 'var(--text)', fontFamily: 'monospace' }}>{digilockerStatus.digilockerid}</span>
-                                </div>
-                              )}
                               {digilockerStatus.name && (
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
                                   <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Name</span>
