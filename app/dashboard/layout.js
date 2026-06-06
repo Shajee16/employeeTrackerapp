@@ -915,6 +915,7 @@ export default function DashboardLayout({ children }) {
                         width: 20, 
                         height: 20, 
                         objectFit: 'contain',
+                        borderRadius: 4,
                         filter: digilockerStatus.verified ? 'none' : 'grayscale(100%) opacity(0.6)'
                       }} 
                     />

@@ -258,7 +258,7 @@ export default function SettingsPage() {
                     fontSize: '1.1rem',
                     boxShadow: '0 4px 12px rgba(16, 185, 129, 0.06)',
                   }}>
-                    <img src="/DigiLocker.png" alt="DigiLocker Verified" style={{ width: 84, height: 84, objectFit: 'contain' }} />
+                    <img src="/DigiLocker.png" alt="DigiLocker Verified" style={{ width: 84, height: 84, objectFit: 'contain', borderRadius: 16 }} />
                     <span>DigiLocker Verified</span>
                   </div>
                 )}
