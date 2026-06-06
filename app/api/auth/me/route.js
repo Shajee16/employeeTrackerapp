@@ -16,9 +16,17 @@ export async function GET() {
     const settings = await db.collection('user_settings').findOne({ userId: session.id });
     if (settings?.themeMode) safeUser.theme = settings.themeMode;
     if (settings?.themeColor) safeUser.themeColor = settings.themeColor;
+
+    // Check DigiLocker verification status
+    const digilocker = await db.collection('digilocker_verifications').findOne({ userId: session.id });
+    if (digilocker?.verified) {
+      safeUser.digilockerVerified = true;
+      safeUser.digilockerVerifiedAt = digilocker.verifiedAt;
+    }
   } catch (err) {
     console.error('Failed to load user settings from Mongo:', err);
   }
 
   return NextResponse.json({ user: safeUser });
 }
+
