@@ -312,6 +312,9 @@ export default function DashboardLayout({ children }) {
     if (!user) return;
     fetch('/api/digilocker').then(r => r.json()).then(d => {
       setDigilockerStatus({ ...d, loading: false });
+      if (d.verified && !user.digilockerVerified) {
+        setUser(prev => prev ? { ...prev, digilockerVerified: true } : null);
+      }
     }).catch(() => setDigilockerStatus({ verified: false, loading: false }));
   }, [user]);
 
